@@ -142,22 +142,26 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()
 const hiddenFamilyFields=/(اسم رب الأسرة|رقم الجوال|الجوال|الهاتف|داخل.?خارج|داخل المخيم|خارج المخيم|حالة الإقامة|مكان الإقامة|عنوان|العنوان|اكتمال بيانات الأسرة|حالة اكتمال|اكتمال البيانات)/i;
 const hiddenMemberFields=/(رقم\s*جوال\s*بديل|جوال\s*بديل|هاتف\s*بديل|المحافظة\s*الأصلية|حالة\s*السكن\s*الأصلية|نوع\s*السكن\s*الحالي|رقم\s*هوية\s*الأسرة|اسم\s*رب\s*الأسرة|داخل\s*المخيم|خارج\s*المخيم|داخل.?خارج)/i;
 const healthGroups=[
- {flag:/(مرض\s*مزمن|أمراض?\s*مزمنة|يعاني\s*من\s*مرض)/i,detail:/(تفاصيل|اسم المرض|سبب|نوع المرض|شرح)/i,label:'المرض المزمن'},
- {flag:/(إصابة|مصاب|إصابات)/i,detail:/(تفاصيل|سبب|نوع|مكان|شرح)/i,label:'الإصابة'},
- {flag:/(إعاقة|ذوي.*إعاقة|معاق)/i,detail:/(تفاصيل|سبب|نوع|درجة|شرح)/i,label:'الإعاقة'}
+ {id:'chronic',flag:/(مرض\s*مزمن|أمراض?\s*مزمنة|يعاني\s*من\s*مرض|مصاب\s*بمرض)/i,detail:/(تفاصيل|سبب|نوع\s*المرض|اسم\s*المرض|شرح)/i,label:'المرض المزمن'},
+ {id:'injury',flag:/(إصابة|مصاب|إصابات)/i,detail:/(تفاصيل|سبب|نوع|مكان|شرح)/i,label:'الإصابة'},
+ {id:'disability',flag:/(إعاقة|ذوي.*إعاقة|معاق)/i,detail:/(تفاصيل|سبب|نوع|درجة|شرح)/i,label:'الإعاقة'}
 ];
-function isYes(v){return /^(نعم|أجل|اجل|yes|1|true)$/i.test(String(v??'').trim())}
-function isNo(v){return /^(لا|كلا|no|0|false)$/i.test(String(v??'').trim())}
-function healthFlagGroup(key){return healthGroups.find(g=>g.flag.test(key)&&!g.detail.test(key));}
+function cleanFieldKey(v){return String(v??'').replace(/[؟?]/g,'').replace(/[ـ]/g,'').replace(/\s+/g,' ').trim();}
+function isYes(v){return /^(نعم|أجل|اجل|يوجد|مصاب|يعاني|yes|y|1|true)$/i.test(String(v??'').trim());}
+function isNo(v){return /^(لا|كلا|لا يوجد|لايوجد|غير موجود|غير مصاب|غير معاق|لا يعاني|ليس لديه|ليس لها|no|n|0|false|لا ينطبق)$/i.test(String(v??'').trim());}
+function healthFlagGroup(key){return healthGroups.find(g=>g.flag.test(cleanFieldKey(key))&&!g.detail.test(cleanFieldKey(key)));}
+function healthDetailGroup(key){const k=cleanFieldKey(key);return healthGroups.find(g=>g.detail.test(k)&&(g.flag.test(k)||(g.id==='chronic'&&/مرض/.test(k))));}
 function memberFieldVisible(key,value,entries){
- if(hiddenMemberFields.test(key)||isNo(value))return false;
- const group=healthFlagGroup(key);
- if(group)return isYes(value);
- for(const g of healthGroups){
-  const flagEntry=entries.find(([k])=>healthFlagGroup(k)===g);
-  if(g.detail.test(key)&&flagEntry&&!isYes(flagEntry[1]))return false;
-  if(g.detail.test(key)&&isNo(value))return false;
+ const k=cleanFieldKey(key),v=String(value??'').trim();
+ if(hiddenMemberFields.test(k)||!v||isNo(v))return false;
+ const flagGroup=healthFlagGroup(k);
+ if(flagGroup)return isYes(v);
+ const detailGroup=healthDetailGroup(k);
+ if(detailGroup){
+  const flagEntry=entries.find(([field])=>healthFlagGroup(field)?.id===detailGroup.id);
+  return !!flagEntry&&isYes(flagEntry[1]);
  }
+ // Any explicit negative answer is omitted; ordinary non-health fields remain visible.
  return true;
 }
 function showFields(obj,mode='family'){
@@ -177,7 +181,7 @@ function renderFamily(f){
   const rel=m['صلة القرابة']||'';
   const details=showFields(m,'member');
   const initials=String(personName).trim().slice(0,1)||'؟';
-  return `<article class="member-card"><div class="member-top"><div class="member-avatar">${esc(initials)}</div><div class="member-title"><h4>${esc(personName)}</h4>${rel?`<span class="member-relation">${esc(rel)}</span>`:''}</div><span class="member-number">${String(i+1).padStart(2,'0')}</span></div>${details?`<div class="member-details">${details}</div>`:`<div class="member-empty">لا توجد بيانات إضافية تستدعي العرض</div>`}</article>`;
+  return `<article class="member-card"><div class="member-top"><div class="member-avatar">${esc(initials)}</div><div class="member-title"><h4>${esc(personName)}</h4>${rel?`<span class="member-relation">${esc(rel)}</span>`:''}</div><span class="member-number">فرد ${String(i+1).padStart(2,'0')}</span></div>${details?`<div class="member-details">${details}</div>`:`<div class="member-empty">لا توجد تفاصيل إضافية مسجلة</div>`}</article>`;
  }).join('')}`;
 }
 function showVerificationSuccess(name){$('welcomeName').textContent=name||'أهلاً بك';$('verifyOverlay').classList.add('show');return new Promise(resolve=>setTimeout(()=>{$('verifyOverlay').classList.remove('show');setTimeout(resolve,280)},1900));}
