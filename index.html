@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b2440"><title>الدعم الفني | مخيم أبو عريبان</title>
+<meta name="theme-color" content="#0b2440"><title>بوابة أهالي مخيم أبو عريبان</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
@@ -83,9 +83,9 @@ body{background:linear-gradient(180deg,#edf3f7 0,#f7f9fb 48%,#f2f6f8 100%);min-h
 <div id="submitMsg" class="message"></div><div id="ticketResult" class="result"></div>
 </section>
 <section id="tab-track" class="card hidden">
-<h3>متابعة حالة الطلب</h3><p class="sub">أدخل رقم المتابعة المكوّن من 6 أرقام ورقم الجوال المسجل.</p>
+<h3>متابعة حالة الطلب</h3><p class="sub">أدخل رقم المتابعة الذي استلمته ورقم الجوال المسجل. الطلبات الجديدة أرقامها من 6 أرقام، ويمكن متابعة الطلبات السابقة بأرقامها القديمة.</p>
 <form id="trackForm"><div class="fields">
-<div class="field"><label for="ticketNo">رقم الطلب</label><input id="ticketNo" required placeholder="مثال: 482615" inputmode="numeric" maxlength="6" pattern="[0-9]{6}"></div>
+<div class="field"><label for="ticketNo">رقم الطلب</label><input id="ticketNo" type="text" required placeholder="أدخل رقم المتابعة كما استلمته" inputmode="text" maxlength="80" autocomplete="off"></div>
 <div class="field"><label for="trackPhone">رقم الجوال المسجل</label><input id="trackPhone" inputmode="tel" required minlength="8" placeholder="059xxxxxxx"></div>
 </div><div class="actions"><button class="btn">عرض حالة الطلب</button></div></form><div id="trackMsg" class="message"></div><div id="trackResult" class="result"></div>
 </section>
@@ -119,7 +119,7 @@ function tab(name){document.querySelectorAll('[data-tab]').forEach(b=>b.classLis
 function unlockPortal(){ $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
 const hiddenFamilyFields=/(اسم رب الأسرة|رقم الجوال|الجوال|الهاتف|داخل.?خارج|داخل المخيم|خارج المخيم|حالة الإقامة|مكان الإقامة|عنوان|العنوان|اكتمال بيانات الأسرة|حالة اكتمال|اكتمال البيانات)/i;
-function showFields(obj,mode='family'){return Object.entries(obj||{}).filter(([k,v])=>!hiddenFamilyFields.test(k)&&String(v??'').trim()!=='').map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}
+function showFields(obj,mode='family'){return Object.entries(obj||{}).filter(([k,v])=>!hiddenFamilyFields.test(k)&&!(mode==='member'&&/رقم هوية الأسرة/.test(k))&&String(v??'').trim()!=='').map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}
 function renderFamily(f){const familyName=f.name||f.fields?.['اسم رب الأسرة']||'رب الأسرة';const familyFields=showFields(f.fields);$('familyResult').className='result show';$('familyResult').innerHTML=`<div class="profile-summary"><div><strong>${esc(familyName)}</strong><small>بيانات رب الأسرة</small></div><span class="pill">تم التحقق</span></div><div class="kv">${familyFields}</div><h3 style="margin-top:20px">أفراد الأسرة <span class="pill">${Number(f.count||f.members?.length||0)} أفراد</span></h3><p class="sub">تظهر هنا البيانات الأساسية لكل فرد دون تكرار بيانات رب الأسرة أو بيانات التواصل والسكن.</p>${(f.members||[]).map((m,i)=>{const personName=m['اسم الفرد']||m['الاسم']||'فرد الأسرة';const rel=m['صلة القرابة']||'';const details=showFields(m,'member');return `<div class="member"><h4>${i+1}. ${esc(personName)} ${rel?`<span class="pill">${esc(rel)}</span>`:''}</h4><div class="kv">${details||'<div><small>البيانات</small><b>لا توجد بيانات إضافية</b></div>'}</div></div>`}).join('')}`;}
 function showVerificationSuccess(name){$('welcomeName').textContent=name||'أهلاً بك';$('verifyOverlay').classList.add('show');return new Promise(resolve=>setTimeout(()=>{$('verifyOverlay').classList.remove('show');setTimeout(resolve,280)},1900));}
 $('lookupForm').addEventListener('submit',async e=>{e.preventDefault();$('lookupBtn').disabled=true;hideMsg('lookupMsg');$('familyResult').className='result';$('challengeForm').classList.add('hidden');verifiedFamily=null;supportSessionToken='';try{const b=await api('/support/challenge',{familyId:$('familyId').value.trim()});activeChallengeId=b.challengeId;$('lookupForm').classList.add('hidden');$('challengeQuestions').innerHTML=(b.questions||[]).map(q=>`<div class="field full"><label for="${esc(q.key)}">${esc(q.label)}</label><input id="${esc(q.key)}" data-answer-key="${esc(q.key)}" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="أدخل الإجابة"></div>`).join('');$('challengeForm').classList.remove('hidden');msg('lookupMsg','تم تجهيز أسئلة التحقق. أكمل الإجابات للمتابعة.','ok');}catch(err){$('lookupForm').classList.remove('hidden');msg('lookupMsg',err.message)}finally{$('lookupBtn').disabled=false}});
