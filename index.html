@@ -47,6 +47,27 @@ body{background:linear-gradient(180deg,#edf3f7 0,#f7f9fb 48%,#f2f6f8 100%);min-h
 .profile-summary strong{font-size:16px;color:#102b46}.profile-summary small{display:block;color:#66788a;font-size:11px;margin-top:3px}
 .ticket{font-size:30px;letter-spacing:3px;direction:ltr;text-align:center;font-variant-numeric:tabular-nums}
 @media(prefers-reduced-motion:reduce){.verify-overlay,.verify-dialog{transition:none}.verify-check{animation:none}}
+
+/* Elegant, compact family-member cards */
+.members-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 0 10px;padding-top:18px;border-top:1px solid #e7edf2}
+.members-heading h3{margin:0;color:#102b46;font-size:18px}
+.members-heading .sub{margin:4px 0 0;font-size:11px}
+.members-count{flex:0 0 auto;padding:7px 12px;border-radius:999px;background:#eaf3f5;color:#176b78;font-size:11px;font-weight:800}
+.member-card{position:relative;overflow:hidden;margin:11px 0 0;padding:15px;border:1px solid #e1e9ef;border-radius:17px;background:linear-gradient(145deg,#fff 0%,#fbfdfe 100%);box-shadow:0 7px 20px #173b5a08}
+.member-card:before{content:"";position:absolute;inset:0 0 0 auto;width:4px;background:linear-gradient(180deg,#168b86,#176b87)}
+.member-top{display:flex;align-items:center;gap:11px;min-width:0}
+.member-avatar{width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,#e6f2f3,#eaf0f7);color:#176b78;font-size:19px;font-weight:800}
+.member-title{min-width:0;flex:1}
+.member-title h4{margin:0;color:#142f47;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.member-relation{display:inline-block;margin-top:3px;padding:3px 9px;border-radius:999px;background:#f0f4f7;color:#63758a;font-size:10px;font-weight:700}
+.member-number{align-self:flex-start;color:#a4b2bd;font-size:11px;font-weight:800;letter-spacing:1px}
+.member-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:13px;padding-top:12px;border-top:1px solid #edf1f4}
+.member-details>div{min-width:0;padding:9px 10px;border:1px solid #edf1f4;border-radius:11px;background:#fff;overflow-wrap:anywhere}
+.member-details small{display:block;margin-bottom:3px;color:#788999;font-size:10px}
+.member-details b{display:block;color:#203a50;font-size:12px;line-height:1.65}
+.member-empty{margin-top:12px;padding:9px 11px;border-radius:10px;background:#f6f8fa;color:#8492a0;font-size:11px}
+@media(max-width:600px){.member-card{padding:13px}.member-details{grid-template-columns:1fr}.members-heading{align-items:flex-start}}
+
 </style></head>
 <body>
 <div id="verifyOverlay" class="verify-overlay" role="dialog" aria-modal="true" aria-labelledby="verifyTitle"><div class="verify-dialog"><div class="verify-check" aria-hidden="true">✓</div><h2 id="verifyTitle">تم التحقق بنجاح</h2><p>أهلاً وسهلاً بك في بوابة أهالي مخيم أبو عريبان</p><span id="welcomeName" class="welcome-name"></span><p>تم التأكد من هويتك، ويمكنك الآن الاطلاع على بيانات أسرتك واستخدام الخدمات الإلكترونية.</p></div></div>
@@ -119,8 +140,46 @@ function tab(name){document.querySelectorAll('[data-tab]').forEach(b=>b.classLis
 function unlockPortal(){ $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.tab)));
 const hiddenFamilyFields=/(اسم رب الأسرة|رقم الجوال|الجوال|الهاتف|داخل.?خارج|داخل المخيم|خارج المخيم|حالة الإقامة|مكان الإقامة|عنوان|العنوان|اكتمال بيانات الأسرة|حالة اكتمال|اكتمال البيانات)/i;
-function showFields(obj,mode='family'){return Object.entries(obj||{}).filter(([k,v])=>!hiddenFamilyFields.test(k)&&!(mode==='member'&&/رقم هوية الأسرة/.test(k))&&String(v??'').trim()!=='').map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}
-function renderFamily(f){const familyName=f.name||f.fields?.['اسم رب الأسرة']||'رب الأسرة';const familyFields=showFields(f.fields);$('familyResult').className='result show';$('familyResult').innerHTML=`<div class="profile-summary"><div><strong>${esc(familyName)}</strong><small>بيانات رب الأسرة</small></div><span class="pill">تم التحقق</span></div><div class="kv">${familyFields}</div><h3 style="margin-top:20px">أفراد الأسرة <span class="pill">${Number(f.count||f.members?.length||0)} أفراد</span></h3><p class="sub">تظهر هنا البيانات الأساسية لكل فرد دون تكرار بيانات رب الأسرة أو بيانات التواصل والسكن.</p>${(f.members||[]).map((m,i)=>{const personName=m['اسم الفرد']||m['الاسم']||'فرد الأسرة';const rel=m['صلة القرابة']||'';const details=showFields(m,'member');return `<div class="member"><h4>${i+1}. ${esc(personName)} ${rel?`<span class="pill">${esc(rel)}</span>`:''}</h4><div class="kv">${details||'<div><small>البيانات</small><b>لا توجد بيانات إضافية</b></div>'}</div></div>`}).join('')}`;}
+const hiddenMemberFields=/(رقم\s*جوال\s*بديل|جوال\s*بديل|هاتف\s*بديل|المحافظة\s*الأصلية|حالة\s*السكن\s*الأصلية|نوع\s*السكن\s*الحالي|رقم\s*هوية\s*الأسرة|اسم\s*رب\s*الأسرة|داخل\s*المخيم|خارج\s*المخيم|داخل.?خارج)/i;
+const healthGroups=[
+ {flag:/(مرض\s*مزمن|أمراض?\s*مزمنة|يعاني\s*من\s*مرض)/i,detail:/(تفاصيل|اسم المرض|سبب|نوع المرض|شرح)/i,label:'المرض المزمن'},
+ {flag:/(إصابة|مصاب|إصابات)/i,detail:/(تفاصيل|سبب|نوع|مكان|شرح)/i,label:'الإصابة'},
+ {flag:/(إعاقة|ذوي.*إعاقة|معاق)/i,detail:/(تفاصيل|سبب|نوع|درجة|شرح)/i,label:'الإعاقة'}
+];
+function isYes(v){return /^(نعم|أجل|اجل|yes|1|true)$/i.test(String(v??'').trim())}
+function isNo(v){return /^(لا|كلا|no|0|false)$/i.test(String(v??'').trim())}
+function healthFlagGroup(key){return healthGroups.find(g=>g.flag.test(key)&&!g.detail.test(key));}
+function memberFieldVisible(key,value,entries){
+ if(hiddenMemberFields.test(key)||isNo(value))return false;
+ const group=healthFlagGroup(key);
+ if(group)return isYes(value);
+ for(const g of healthGroups){
+  const flagEntry=entries.find(([k])=>healthFlagGroup(k)===g);
+  if(g.detail.test(key)&&flagEntry&&!isYes(flagEntry[1]))return false;
+  if(g.detail.test(key)&&isNo(value))return false;
+ }
+ return true;
+}
+function showFields(obj,mode='family'){
+ const entries=Object.entries(obj||{}).filter(([k,v])=>String(v??'').trim()!=='');
+ return entries.filter(([k,v])=>{
+  if(hiddenFamilyFields.test(k))return false;
+  if(mode==='member')return memberFieldVisible(k,v,entries);
+  return true;
+ }).map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('');
+}
+function renderFamily(f){
+ const familyName=f.name||f.fields?.['اسم رب الأسرة']||'رب الأسرة';
+ const familyFields=showFields(f.fields);
+ $('familyResult').className='result show';
+ $('familyResult').innerHTML=`<div class="profile-summary"><div><strong>${esc(familyName)}</strong><small>بيانات رب الأسرة</small></div><span class="pill">تم التحقق</span></div><div class="kv">${familyFields}</div><div class="members-heading"><div><h3>أفراد الأسرة</h3><p class="sub">البيانات الأساسية، مع إظهار تفاصيل الحالات الصحية عند تسجيل «نعم» فقط.</p></div><span class="members-count">${Number(f.count||f.members?.length||0)} أفراد</span></div>${(f.members||[]).map((m,i)=>{
+  const personName=m['اسم الفرد']||m['الاسم']||'فرد الأسرة';
+  const rel=m['صلة القرابة']||'';
+  const details=showFields(m,'member');
+  const initials=String(personName).trim().slice(0,1)||'؟';
+  return `<article class="member-card"><div class="member-top"><div class="member-avatar">${esc(initials)}</div><div class="member-title"><h4>${esc(personName)}</h4>${rel?`<span class="member-relation">${esc(rel)}</span>`:''}</div><span class="member-number">${String(i+1).padStart(2,'0')}</span></div>${details?`<div class="member-details">${details}</div>`:`<div class="member-empty">لا توجد بيانات إضافية تستدعي العرض</div>`}</article>`;
+ }).join('')}`;
+}
 function showVerificationSuccess(name){$('welcomeName').textContent=name||'أهلاً بك';$('verifyOverlay').classList.add('show');return new Promise(resolve=>setTimeout(()=>{$('verifyOverlay').classList.remove('show');setTimeout(resolve,280)},1900));}
 $('lookupForm').addEventListener('submit',async e=>{e.preventDefault();$('lookupBtn').disabled=true;hideMsg('lookupMsg');$('familyResult').className='result';$('challengeForm').classList.add('hidden');verifiedFamily=null;supportSessionToken='';try{const b=await api('/support/challenge',{familyId:$('familyId').value.trim()});activeChallengeId=b.challengeId;$('lookupForm').classList.add('hidden');$('challengeQuestions').innerHTML=(b.questions||[]).map(q=>`<div class="field full"><label for="${esc(q.key)}">${esc(q.label)}</label><input id="${esc(q.key)}" data-answer-key="${esc(q.key)}" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="أدخل الإجابة"></div>`).join('');$('challengeForm').classList.remove('hidden');msg('lookupMsg','تم تجهيز أسئلة التحقق. أكمل الإجابات للمتابعة.','ok');}catch(err){$('lookupForm').classList.remove('hidden');msg('lookupMsg',err.message)}finally{$('lookupBtn').disabled=false}});
 $('challengeForm').addEventListener('submit',async e=>{e.preventDefault();$('verifyBtn').disabled=true;hideMsg('lookupMsg');try{const answers={};document.querySelectorAll('[data-answer-key]').forEach(el=>answers[el.dataset.answerKey]=el.value.trim());const v=await api('/support/verify',{challengeId:activeChallengeId,answers});supportSessionToken=v.sessionToken;const b=await api('/support/lookup',{});verifiedFamily={...b.family,familyId:$('familyId').value.trim(),phone:b.family.fields?.['رقم الجوال']||b.family.members?.[0]?.['رقم الجوال']||''};renderFamily(b.family);$('challengeForm').classList.add('hidden');$('requestType').dispatchEvent(new Event('change'));$('trackPhone').value=verifiedFamily.phone;await showVerificationSuccess(b.family.name||b.family.fields?.['اسم رب الأسرة']);unlockPortal();}catch(err){supportSessionToken='';verifiedFamily=null;msg('lookupMsg',err.message)}finally{$('verifyBtn').disabled=false}});
