@@ -1,1 +1,10 @@
-{"name":"الدعم الفني - مخيم أبو عريبان","short_name":"دعم أبو عريبان","start_url":"./","display":"standalone","background_color":"#f3f7fb","theme_color":"#0b2440","lang":"ar","dir":"rtl"}
+{
+  "name": "بوابة أهالي مخيم أبو عريبان",
+  "short_name": "بوابة الأهالي",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fa",
+  "theme_color": "#102b46",
+  "lang": "ar",
+  "dir": "rtl"
+}
