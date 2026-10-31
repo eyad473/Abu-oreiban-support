@@ -293,25 +293,131 @@ $('notificationList').addEventListener('click',e=>{const btn=e.target.closest('[
 function addPortalNotice(title,body,when='الآن'){portalNotices.unshift({id:'local:'+Date.now()+':'+portalNotices.length,title,body,when});renderNotifications()}
 async function openNotifications(){tab('notifications');await refreshFamilyNotifications();markVisibleNotificationsRead();$('tab-notifications').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
 $('openNotifications').addEventListener('click',openNotifications);$('refreshNotifications').addEventListener('click',refreshFamilyNotifications);
+let familyNotificationsBusy=false;
+let familyNotificationsLastFetch=0;
 async function refreshFamilyNotifications(){
- if(!supportSessionToken||!navigator.onLine)return;
+ if(!supportSessionToken||!navigator.onLine||familyNotificationsBusy)return;
+ familyNotificationsBusy=true;
  try{
   const r=await fetch(API+'/support/notifications',{method:'GET',headers:{'X-Support-Session':supportSessionToken},cache:'no-store'});
   let b={};try{b=await r.json()}catch{}
-  if(!r.ok||!b.ok)throw Error(b.error||'تعذر جلب طلباتك');
+  if(!r.ok||!b.ok)throw Object.assign(Error(b.error||'تعذر جلب طلباتك'),{status:r.status});
   const items=Array.isArray(b.items)?b.items:[];
   const current=new Map();
+  const freshUpdates=[];
   for(const x of items){
    const key=String(x.ticketNo||'');
-   const snap=[x.status||'',x.staffReply||'',x.updatedAt||0].join('|');current.set(key,snap);
+   const snap=[x.status||'',x.staffReply||'',x.updatedAt||0].join('|');
+   current.set(key,snap);
    const previous=familyNotificationSnapshot.get(key);
-   const changed=notificationsInitialized&&previous!==undefined&&previous!==snap;
-   const initialRelevant=!notificationsInitialized&&(!!String(x.staffReply||'').trim()||Number(x.updatedAt)>Number(x.createdAt)||!['جديد','قيد المتابعة'].includes(String(x.status||'')));
-   // إشعارات الطلبات تُحتسب من حالة الطلب ورد الإدارة، ولا تُنشأ كتنبيه مكرر.
+   // لا نعرض تنبيهاً عند أول تحميل؛ فقط عند رصد تغيير جديد بعد تهيئة القائمة.
+   if(notificationsInitialized&&previous!==undefined&&previous!==snap){
+    freshUpdates.push(x);
+   }
   }
-  familyNotificationSnapshot=current;familyRequests=items;notificationsInitialized=true;renderNotifications();
- }catch(e){if(e.message&&/انتهت جلسة|جلسة الدخول/.test(e.message)){localStorage.removeItem(SUPPORT_SESSION_KEY);supportSessionToken='';toast('انتهت جلسة الدخول؛ يرجى التحقق من الهوية مجدداً','err')}}
+  familyNotificationSnapshot=current;
+  familyRequests=items;
+  notificationsInitialized=true;
+  renderNotifications();
+  if(freshUpdates.length){
+   const latest=freshUpdates[0];
+   const hasReply=!!String(latest.staffReply||'').trim();
+   toast(hasReply?'ورد رد جديد من إدارة المخيم على طلبك':'تم تحديث حالة أحد طلباتك','ok');
+  }
+ }catch(e){
+  if(e.message&&/انتهت جلسة|جلسة الدخول/.test(e.message)){
+   localStorage.removeItem(SUPPORT_SESSION_KEY);supportSessionToken='';
+   toast('انتهت جلسة الدخول؛ يرجى التحقق من الهوية مجدداً','err');
+  }
+ }finally{
+  familyNotificationsBusy=false;
+  familyNotificationsLastFetch=Date.now();
+ }
 }
+// مزامنة ذكية حسب نشاط المستخدم: لا توجد طلبات دورية أثناء الخمول أو إخفاء التبويب.
+const FAMILY_SYNC_INTERVAL=20000;
+const FAMILY_SYNC_IDLE_AFTER=60000;
+let familySyncPollTimer=null;
+let familySyncIdleTimer=null;
+let familySyncActive=false;
+function stopFamilySyncTimers(){
+ if(familySyncPollTimer){clearTimeout(familySyncPollTimer);familySyncPollTimer=null;}
+ if(familySyncIdleTimer){clearTimeout(familySyncIdleTimer);familySyncIdleTimer=null;}
+ familySyncActive=false;
+ window.familyNotificationTimer=null;
+}
+function scheduleFamilySyncPoll(){
+ if(familySyncPollTimer){clearTimeout(familySyncPollTimer);familySyncPollTimer=null;}
+ if(!supportSessionToken||!familySyncActive||document.visibilityState!=='visible')return;
+ familySyncPollTimer=setTimeout(async()=>{
+  familySyncPollTimer=null;
+  if(!supportSessionToken||!familySyncActive||document.visibilityState!=='visible')return;
+  await refreshFamilyNotifications();
+  scheduleFamilySyncPoll();
+ },FAMILY_SYNC_INTERVAL);
+ window.familyNotificationTimer=familySyncPollTimer;
+}
+function armFamilySyncIdleTimer(){
+ if(familySyncIdleTimer)clearTimeout(familySyncIdleTimer);
+ familySyncIdleTimer=setTimeout(()=>{
+  familySyncIdleTimer=null;
+  familySyncActive=false;
+  if(familySyncPollTimer){clearTimeout(familySyncPollTimer);familySyncPollTimer=null;}
+  window.familyNotificationTimer=null;
+ },FAMILY_SYNC_IDLE_AFTER);
+}
+function noteFamilyUserActivity(){
+ if(!supportSessionToken||document.visibilityState!=='visible')return;
+ const wasIdle=!familySyncActive;
+ familySyncActive=true;
+ armFamilySyncIdleTimer();
+ if(wasIdle){
+  refreshFamilyNotifications();
+  scheduleFamilySyncPoll();
+ }
+}
+function startFamilyNotificationLiveUpdates(){
+ stopFamilySyncTimers();
+ if(!supportSessionToken||document.visibilityState!=='visible')return;
+ familySyncActive=true;
+ armFamilySyncIdleTimer();
+ refreshFamilyNotifications();
+ scheduleFamilySyncPoll();
+}
+['pointerdown','keydown','touchstart','scroll','click','input'].forEach(eventName=>{
+ document.addEventListener(eventName,noteFamilyUserActivity,{passive:true});
+});
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='hidden'){
+  stopFamilySyncTimers();
+  return;
+ }
+ if(supportSessionToken){
+  const wasIdle=!familySyncActive;
+  familySyncActive=true;armFamilySyncIdleTimer();
+  if(wasIdle||Date.now()-familyNotificationsLastFetch>1200)refreshFamilyNotifications();
+  scheduleFamilySyncPoll();
+ }
+});
+window.addEventListener('focus',()=>{
+ if(supportSessionToken&&document.visibilityState==='visible'){
+  const wasIdle=!familySyncActive;
+  familySyncActive=true;armFamilySyncIdleTimer();
+  if(wasIdle||Date.now()-familyNotificationsLastFetch>1200)refreshFamilyNotifications();
+  scheduleFamilySyncPoll();
+ }
+});
+window.addEventListener('pageshow',()=>{
+ if(supportSessionToken&&document.visibilityState==='visible'){
+  const wasIdle=!familySyncActive;
+  familySyncActive=true;armFamilySyncIdleTimer();
+  if(wasIdle||Date.now()-familyNotificationsLastFetch>1200)refreshFamilyNotifications();
+  scheduleFamilySyncPoll();
+ }
+});
+window.addEventListener('online',()=>{
+ if(supportSessionToken)refreshFamilyNotifications();
+});
 document.querySelectorAll('[data-go-tab]').forEach(b=>b.addEventListener('click',()=>{tab(b.dataset.goTab);$('tab-'+b.dataset.goTab).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}));
 // Small, temporary touch feedback; no external animation library is loaded.
 document.addEventListener('click',e=>{const b=e.target.closest('.btn');if(b&&!b.disabled&&!b.classList.contains('is-loading')){b.classList.add('tap-feedback');setTimeout(()=>b.classList.remove('tap-feedback'),180)}});
@@ -377,20 +483,20 @@ async function downloadDigitalCard(){if(!verifiedFamily){toast('أكمل الت�
 $('downloadFamilyCard').addEventListener('click',downloadDigitalCard);
 function showVerificationSuccess(name){$('welcomeName').textContent=name||'أهلاً بك';$('portalGreeting').textContent=name?`أهلاً بك، ${name}`:'أهلاً وسهلاً بك';$('verifyOverlay').classList.add('show');return new Promise(resolve=>setTimeout(()=>{$('verifyOverlay').classList.remove('show');setTimeout(resolve,280)},1900));}
 $('lookupForm').addEventListener('submit',async e=>{e.preventDefault();$('lookupBtn').disabled=true;$('lookupBtn').classList.add('is-loading');hideMsg('lookupMsg');$('familyResult').className='result';$('challengeForm').classList.add('hidden');verifiedFamily=null;supportSessionToken='';try{const b=await api('/support/challenge',{familyId:$('familyId').value.trim()});activeChallengeId=b.challengeId;$('lookupForm').classList.add('hidden');$('challengeQuestions').innerHTML=(b.questions||[]).map(q=>`<div class="field full"><label for="${esc(q.key)}">${esc(q.label)}</label><input id="${esc(q.key)}" data-answer-key="${esc(q.key)}" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="أدخل الإجابة"></div>`).join('');$('challengeForm').classList.remove('hidden');msg('lookupMsg','تم تجهيز أسئلة التحقق. أكمل الإجابات للمتابعة.','ok');}catch(err){$('lookupForm').classList.remove('hidden');msg('lookupMsg',err.message)}finally{$('lookupBtn').disabled=false;$('lookupBtn').classList.remove('is-loading')}});
-$('challengeForm').addEventListener('submit',async e=>{e.preventDefault();$('verifyBtn').disabled=true;$('verifyBtn').classList.add('is-loading');hideMsg('lookupMsg');try{const answers={};document.querySelectorAll('[data-answer-key]').forEach(el=>answers[el.dataset.answerKey]=el.value.trim());const v=await api('/support/verify',{challengeId:activeChallengeId,answers});supportSessionToken=v.sessionToken;localStorage.setItem(SUPPORT_SESSION_KEY,supportSessionToken);const b=await api('/support/lookup',{});verifiedFamily={...b.family,familyId:$('familyId').value.trim(),phone:b.family.fields?.['رقم الجوال']||b.family.members?.[0]?.['رقم الجوال']||''};loadReadNotifications();renderFamily(b.family);$('challengeForm').classList.add('hidden');$('requestType').dispatchEvent(new Event('change'));await showVerificationSuccess(b.family.name||b.family.fields?.['اسم رب الأسرة']);unlockPortal();familyNotificationSnapshot=new Map();notificationsInitialized=false;portalNotices.length=0;familyRequests=[];await refreshFamilyNotifications();if(window.familyNotificationTimer)clearInterval(window.familyNotificationTimer);window.familyNotificationTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshFamilyNotifications()},45000);}catch(err){supportSessionToken='';verifiedFamily=null;try{localStorage.removeItem(SUPPORT_SESSION_KEY)}catch(e){}msg('lookupMsg',err.message)}finally{$('verifyBtn').disabled=false;$('verifyBtn').classList.remove('is-loading')}});
+$('challengeForm').addEventListener('submit',async e=>{e.preventDefault();$('verifyBtn').disabled=true;$('verifyBtn').classList.add('is-loading');hideMsg('lookupMsg');try{const answers={};document.querySelectorAll('[data-answer-key]').forEach(el=>answers[el.dataset.answerKey]=el.value.trim());const v=await api('/support/verify',{challengeId:activeChallengeId,answers});supportSessionToken=v.sessionToken;localStorage.setItem(SUPPORT_SESSION_KEY,supportSessionToken);const b=await api('/support/lookup',{});verifiedFamily={...b.family,familyId:$('familyId').value.trim(),phone:b.family.fields?.['رقم الجوال']||b.family.members?.[0]?.['رقم الجوال']||''};loadReadNotifications();renderFamily(b.family);$('challengeForm').classList.add('hidden');$('requestType').dispatchEvent(new Event('change'));await showVerificationSuccess(b.family.name||b.family.fields?.['اسم رب الأسرة']);unlockPortal();familyNotificationSnapshot=new Map();notificationsInitialized=false;portalNotices.length=0;familyRequests=[];startFamilyNotificationLiveUpdates();}catch(err){supportSessionToken='';verifiedFamily=null;try{localStorage.removeItem(SUPPORT_SESSION_KEY)}catch(e){}msg('lookupMsg',err.message)}finally{$('verifyBtn').disabled=false;$('verifyBtn').classList.remove('is-loading')}});
 $('restartBtn').addEventListener('click',()=>{activeChallengeId='';supportSessionToken='';verifiedFamily=null;$('challengeForm').classList.add('hidden');$('challengeQuestions').innerHTML='';$('lookupForm').classList.remove('hidden');hideMsg('lookupMsg');$('familyResult').className='result'});
 async function logoutPortal(){
  const token=supportSessionToken;
  try{if(token)await api('/support/logout',{});}catch(e){}
  localStorage.removeItem(SUPPORT_SESSION_KEY);supportSessionToken='';verifiedFamily=null;activeChallengeId='';familyRequests=[];portalNotices.length=0;familyNotificationSnapshot.clear();notificationsInitialized=false;
- if(window.familyNotificationTimer){clearInterval(window.familyNotificationTimer);window.familyNotificationTimer=null;}
+ stopFamilySyncTimers();
  $('portalMain').classList.add('hidden');$('portalHeader').classList.add('hidden');$('portalGate').classList.remove('hidden');
  $('familyId').value='';$('lookupForm').reset();$('lookupForm').classList.remove('hidden');$('challengeForm').classList.add('hidden');$('challengeQuestions').innerHTML='';$('familyResult').className='result';$('ticketResult').className='result';$('requestForm').reset();hideMsg('lookupMsg');hideMsg('submitMsg');$('assistantLaunch').classList.remove('visible');
  toast('تم تسجيل الخروج بنجاح','ok');window.scrollTo({top:0,behavior:'auto'});
 }
 $('logoutBtn').addEventListener('click',logoutPortal);
 $('requestType').addEventListener('change',()=> $('changesWrap').classList.toggle('hidden',$('requestType').value!=='طلب تحديث بيانات'));
-$('requestForm').addEventListener('submit',async e=>{e.preventDefault();if(!verifiedFamily){msg('submitMsg','تحقق من بيانات الأسرة أولاً من تبويب «بياناتي».');return} $('submitBtn').disabled=true;$('submitBtn').classList.add('is-loading');hideMsg('submitMsg');$('ticketResult').className='result';try{const b=await api('/support/submit',{sessionToken:supportSessionToken,requestType:$('requestType').value,subject:$('subject').value.trim(),message:$('message').value.trim(),requestedChanges:$('requestedChanges').value.trim()});msg('submitMsg',b.message,'ok');toast('تم إرسال الطلب بنجاح','ok');$('ticketResult').className='result show';$('ticketResult').innerHTML=`<div class="status-panel status-panel-follow"><div class="status-head"><b>تم استلام طلبك بنجاح</b>${statusMarkup(b.status||'قيد المتابعة')}</div><div>رقم الطلب: <strong class="ticket">${esc(b.ticketNo)}</strong></div><p class="sub">ستصلك ردود إدارة المخيم وأي تحديث على طلبك من خلال قسم الإشعارات.</p><button type="button" class="btn secondary" id="copyTicket">نسخ رقم الطلب</button></div>`;$('copyTicket').onclick=()=>navigator.clipboard?.writeText(b.ticketNo);addPortalNotice('تم استلام طلبك',`رقم الطلب: ${b.ticketNo} — الحالة: ${b.status||'قيد المتابعة'}`);refreshFamilyNotifications();$('requestForm').reset();$('requestType').dispatchEvent(new Event('change'));}catch(err){msg('submitMsg',err.message)}finally{$('submitBtn').disabled=false;$('submitBtn').classList.remove('is-loading')}});
+$('requestForm').addEventListener('submit',async e=>{e.preventDefault();if(!verifiedFamily){msg('submitMsg','تحقق من بيانات الأسرة أولاً من تبويب «بياناتي».');return} $('submitBtn').disabled=true;$('submitBtn').classList.add('is-loading');hideMsg('submitMsg');$('ticketResult').className='result';try{const b=await api('/support/submit',{sessionToken:supportSessionToken,requestType:$('requestType').value,subject:$('subject').value.trim(),message:$('message').value.trim(),requestedChanges:$('requestedChanges').value.trim()});msg('submitMsg',b.message,'ok');toast('تم إرسال الطلب بنجاح','ok');$('ticketResult').className='result show';$('ticketResult').innerHTML=`<div class="status-panel status-panel-follow"><div class="status-head"><b>تم استلام طلبك بنجاح</b>${statusMarkup(b.status||'قيد المتابعة')}</div><div>رقم الطلب: <strong class="ticket">${esc(b.ticketNo)}</strong></div><p class="sub">ستصلك ردود إدارة المخيم وأي تحديث على طلبك من خلال قسم الإشعارات.</p><button type="button" class="btn secondary" id="copyTicket">نسخ رقم الطلب</button></div>`;$('copyTicket').onclick=()=>navigator.clipboard?.writeText(b.ticketNo);addPortalNotice('تم استلام طلبك',`رقم الطلب: ${b.ticketNo} — الحالة: ${b.status||'قيد المتابعة'}`);await refreshFamilyNotifications();$('requestForm').reset();$('requestType').dispatchEvent(new Event('change'));}catch(err){msg('submitMsg',err.message)}finally{$('submitBtn').disabled=false;$('submitBtn').classList.remove('is-loading')}});
 
 
 // Phase 3: local, bounded FAQ assistant. It never reads family records or sends data.
@@ -434,9 +540,7 @@ async function restoreSupportSession(){
   $('challengeForm').classList.add('hidden');unlockPortal();
   familyNotificationSnapshot=new Map();notificationsInitialized=false;familyRequests=[];portalNotices.length=0;
   finishSessionCheck();
-  refreshFamilyNotifications().catch(()=>{});
-  if(window.familyNotificationTimer)clearInterval(window.familyNotificationTimer);
-  window.familyNotificationTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshFamilyNotifications()},45000);
+  startFamilyNotificationLiveUpdates();
   return true;
  }catch(e){
   verifiedFamily=null;
