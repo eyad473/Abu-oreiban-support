@@ -1,4 +1,4 @@
-const CACHE='abu-oreiban-residents-phase8-smart-activity-sync';
+const CACHE='abu-oreiban-residents-phase9-request-form';
 const ASSETS=['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('abu-oreiban-residents-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
