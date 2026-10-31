@@ -136,6 +136,27 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 @media(min-width:700px){.assistant-panel{left:18px;right:auto;bottom:82px}.assistant-launch{left:22px;bottom:22px}}
 @media(prefers-reduced-motion:reduce){.assistant-panel,.assistant-launch{transition:none!important}}
 
+
+/* Final refinement: compact resident navigation and discreet account exit */
+.nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.nav button{min-height:66px;padding:8px 4px;font-size:12px;border-radius:13px;line-height:1.45;box-shadow:0 3px 10px #122b440c}
+@media(max-width:600px){.nav{gap:7px}.nav button{min-height:62px;padding:7px 3px;font-size:11px;border-radius:12px}}
+#portalWelcome>div:last-child{gap:7px!important}
+#logoutBtn{width:auto!important;min-height:34px!important;padding:6px 10px!important;border:1px solid #d8e2e9!important;border-radius:10px!important;background:#f7fafc!important;color:#536779!important;font-size:10px!important;font-weight:700!important;box-shadow:none!important;white-space:nowrap}
+#logoutBtn:before{content:'↪ ';font-size:12px;color:#71879a}
+#logoutBtn:hover{background:#eef3f6!important;border-color:#c7d5df!important}
+#announcementsCard .announcement-empty{margin-top:12px}
+.announcement-list{display:grid;gap:11px;margin-top:12px}
+.announcement-item{position:relative;padding:15px 16px;border:1px solid #dce7ed;border-right:4px solid #176b87;border-radius:14px;background:linear-gradient(110deg,#fff,#f8fbfd);box-shadow:0 5px 16px #173b5a08}
+.announcement-item.priority-urgent{border-right-color:#b5473c;background:linear-gradient(110deg,#fff,#fff9f7)}
+.announcement-item.priority-important{border-right-color:#c49a4b}
+.announcement-item h4{margin:0 0 5px;color:#16344d;font-size:15px}
+.announcement-item p{margin:0;color:#53697b;font-size:12px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}
+.announcement-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;color:#7b8b98;font-size:10px}
+.announcement-tag{display:inline-flex;padding:3px 8px;border-radius:99px;background:#eaf3f7;color:#24566c;font-weight:800}
+.announcement-item.priority-urgent .announcement-tag{background:#fff0ed;color:#a33d32}
+.announcement-loading{padding:18px;border:1px dashed #cbd9e3;border-radius:14px;text-align:center;color:#718293;font-size:12px}
+
 </style></head>
 <body>
 <div id="verifyOverlay" class="verify-overlay" role="dialog" aria-modal="true" aria-labelledby="verifyTitle"><div class="verify-dialog"><div class="verify-check" aria-hidden="true">✓</div><h2 id="verifyTitle">تم التحقق بنجاح</h2><p>أهلاً وسهلاً بك في بوابة أهالي مخيم أبو عريبان</p><span id="welcomeName" class="welcome-name"></span><p>تم التأكد من هويتك، ويمكنك الآن الاطلاع على بيانات أسرتك واستخدام الخدمات الإلكترونية.</p></div></div>
@@ -161,7 +182,7 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 <button class="active" data-tab="home">الرئيسية</button><button data-tab="data">بياناتي</button><button data-tab="request">إرسال طلب</button><button data-tab="notifications">الإشعارات <span id="navBellCount" class="notification-count hidden">0</span></button>
 </nav>
 <section id="tab-home">
-<section class="card" id="announcementsCard"><div class="section-heading"><h3>إعلانات إدارة المخيم</h3><span class="pill">الإعلانات الرسمية</span></div><div class="announcement-empty"><b>لا توجد إعلانات منشورة حالياً</b>ستظهر هنا التعميمات والتنويهات الرسمية فور ربط البوابة بمصدر الإعلانات المعتمد.</div></section>
+<section class="card" id="announcementsCard"><div class="section-heading"><div><h3>إعلانات إدارة المخيم</h3><p class="sub" style="margin:3px 0 0">التعميمات والتنويهات المعتمدة من إدارة المخيم</p></div><span class="pill">الإعلانات الرسمية</span></div><div id="announcementsContent"><div class="announcement-loading">جارٍ تحميل الإعلانات الرسمية…</div></div></section>
 <section class="card" id="digitalCardSection"><div class="section-heading"><div><h3>بطاقتي الرقمية</h3><p class="sub" style="margin:3px 0 0">بطاقة تعريف الأسرة — احفظها كصورة على هاتفك</p></div><span class="pill">خاصة</span></div>
 <div id="digitalFamilyCard" class="digital-family-card"><div class="digital-card-top"><b>⌂ مخيم أبو عريبان</b><span class="digital-card-brand">البطاقة الرقمية للأسرة</span></div><div class="digital-card-title">بطاقة الأسرة</div><div class="digital-card-name" id="digitalFamilyName">تظهر بعد التحقق</div><div class="digital-card-meta digital-card-meta-grid"><div><small>رقم الهوية</small><b id="digitalFamilyId">—</b></div><div><small>عدد أفراد الأسرة</small><b id="digitalFamilyCount">—</b></div><div><small>رقم الجوال</small><b id="digitalFamilyPhone">—</b></div></div><div class="digital-card-bottom"><span>بطاقة تعريفية داخل البوابة وليست وثيقة رسمية لإثبات الهوية</span><span>2026</span></div></div>
 <div class="actions"><button type="button" class="btn" id="downloadFamilyCard">تنزيل البطاقة صورة PNG</button></div><p class="sub" style="margin:10px 0 0">تُحفظ البطاقة كصورة عادية، ويمكنك فتحها من التنزيلات أو إضافتها إلى صور الهاتف.</p></section>
@@ -197,6 +218,17 @@ let familyRequests=[];
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(path,body){const headers={'Content-Type':'application/json'};if(supportSessionToken)headers['X-Support-Session']=supportSessionToken;const r=await fetch(API+path,{method:'POST',headers,body:JSON.stringify(body||{}),cache:'no-store'});let b={};try{b=await r.json()}catch{}if(!r.ok||!b.ok)throw Error(b.error||'تعذر الاتصال بالخادم');return b}
+async function loadOfficialAnnouncements(){
+ const box=$('announcementsContent');if(!box)return;
+ try{
+  const r=await fetch(API+'/announcements',{method:'GET',headers:{'Accept':'application/json'},cache:'no-store'});
+  const b=await r.json();if(!r.ok||!b.ok)throw Error(b.error||'تعذر تحميل الإعلانات');
+  const items=Array.isArray(b.items)?b.items:[];
+  if(!items.length){box.innerHTML='<div class="announcement-empty"><b>لا توجد إعلانات منشورة حالياً</b>ستظهر هنا التعميمات والتنويهات الرسمية فور اعتمادها ونشرها من إدارة المخيم.</div>';return;}
+  box.innerHTML='<div class="announcement-list">'+items.map(a=>{const p=a.priority==='عاجل'?'urgent':a.priority==='مهم'?'important':'normal';const d=Number(a.publishedAt||a.createdAt||0);const date=d?new Intl.DateTimeFormat('ar',{year:'numeric',month:'long',day:'numeric'}).format(new Date(d)):'إعلان رسمي';return `<article class="announcement-item priority-${p}"><h4>${esc(a.title)}</h4><p>${esc(a.body)}</p><div class="announcement-meta"><span class="announcement-tag">${esc(a.category||'تعميم')}</span><span>${esc(date)}</span>${a.expiresAt?'<span>· صالح حتى '+esc(new Intl.DateTimeFormat('ar',{year:'numeric',month:'short',day:'numeric'}).format(new Date(Number(a.expiresAt))))+'</span>':''}</div></article>`}).join('')+'</div>';
+ }catch(e){box.innerHTML='<div class="announcement-empty"><b>تعذر تحميل الإعلانات حالياً</b>تحقق من الاتصال بالإنترنت، ثم أعد فتح البوابة.</div>';}
+}
+
 function msg(id,text,kind='err'){const e=$(id);e.textContent=text;e.className='message show '+kind}
 
 function hideMsg(id){$(id).className='message'}
@@ -388,6 +420,7 @@ async function restoreSupportSession(){
   window.familyNotificationTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshFamilyNotifications()},45000);
  }catch(e){supportSessionToken='';verifiedFamily=null;try{localStorage.removeItem(SUPPORT_SESSION_KEY)}catch(err){}}
 }
+loadOfficialAnnouncements();window.addEventListener('online',loadOfficialAnnouncements);window.setInterval(()=>{if(document.visibilityState==='visible')loadOfficialAnnouncements()},60000);
 restoreSupportSession();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script></body></html>
