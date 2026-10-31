@@ -158,8 +158,20 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 .announcement-loading{padding:18px;border:1px dashed #cbd9e3;border-radius:14px;text-align:center;color:#718293;font-size:12px}
 
 .official-icon{width:16px;height:16px;display:inline-block;vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-inline-end:4px}
-</style></head>
+</style><script>document.documentElement.classList.add('session-checking');</script>
+<style>
+html.session-checking #portalGate{display:none!important}
+#sessionBoot{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 85% 0%,#dcece9 0,transparent 42%),radial-gradient(ellipse at 0% 100%,#dce7f0 0,transparent 40%),#f4f7fa;text-align:center}
+html.session-checking #sessionBoot{display:flex}
+.session-boot-card{width:min(100%,360px);padding:30px 24px;background:#fff;border:1px solid #e1e9ed;border-radius:24px;box-shadow:0 16px 45px #102b4612;color:#17334a}
+.session-boot-mark{width:58px;height:58px;margin:0 auto 16px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(145deg,#102b46,#1a596b);color:#e4c887;font-size:28px}
+.session-boot-spinner{width:22px;height:22px;margin:18px auto 0;border:3px solid #dce8ec;border-top-color:#147e86;border-radius:50%;animation:sessionSpin .8s linear infinite}
+@keyframes sessionSpin{to{transform:rotate(360deg)}}
+#sessionBootRetry{display:none;margin:18px auto 0;padding:11px 22px;border:0;border-radius:12px;background:#176b87;color:#fff;font:inherit;font-weight:700}
+</style>
+</head>
 <body>
+<div id="sessionBoot" role="status" aria-live="polite"><div class="session-boot-card"><div class="session-boot-mark" aria-hidden="true">⌂</div><strong id="sessionBootTitle">جارٍ التحقق من جلسة الدخول</strong><p id="sessionBootText">يرجى الانتظار لحظات حتى نجهّز بوابتك.</p><div id="sessionBootSpinner" class="session-boot-spinner" aria-hidden="true"></div><button id="sessionBootRetry" type="button">إعادة المحاولة</button></div></div>
 <div id="verifyOverlay" class="verify-overlay" role="dialog" aria-modal="true" aria-labelledby="verifyTitle"><div class="verify-dialog"><div class="verify-check" aria-hidden="true">✓</div><h2 id="verifyTitle">تم التحقق بنجاح</h2><p>أهلاً وسهلاً بك في بوابة أهالي مخيم أبو عريبان</p><span id="welcomeName" class="welcome-name"></span><p>تم التأكد من هويتك، ويمكنك الآن الاطلاع على بيانات أسرتك واستخدام الخدمات الإلكترونية.</p></div></div>
 <section id="portalGate" aria-labelledby="gateTitle"><div class="gate-shell">
   <div class="gate-brand"><div class="gate-emblem" aria-hidden="true">⌂</div><div><h1>مخيم أبو عريبان</h1><p>البوابة الإلكترونية للأهالي</p></div></div>
@@ -218,7 +230,7 @@ let activeChallengeId='';
 let familyRequests=[];
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function api(path,body){const headers={'Content-Type':'application/json'};if(supportSessionToken)headers['X-Support-Session']=supportSessionToken;const r=await fetch(API+path,{method:'POST',headers,body:JSON.stringify(body||{}),cache:'no-store'});let b={};try{b=await r.json()}catch{}if(!r.ok||!b.ok)throw Error(b.error||'تعذر الاتصال بالخادم');return b}
+async function api(path,body){const headers={'Content-Type':'application/json'};if(supportSessionToken)headers['X-Support-Session']=supportSessionToken;const r=await fetch(API+path,{method:'POST',headers,body:JSON.stringify(body||{}),cache:'no-store'});let b={};try{b=await r.json()}catch{}if(!r.ok||!b.ok){const error=Error(b.error||'تعذر الاتصال بالخادم');error.status=r.status;throw error}return b}
 async function loadOfficialAnnouncements(){
  const box=$('announcementsContent');if(!box)return;
  try{
@@ -409,9 +421,11 @@ $('readAnnouncements').addEventListener('click',readAnnouncements);
 window.addEventListener('online',()=>{});window.addEventListener('offline',()=>{});if(!navigator.onLine);
 // Only show the assistant after identity verification; no assistant access to family objects.
 const originalUnlockPortal=unlockPortal;unlockPortal=function(){originalUnlockPortal();$('assistantLaunch').classList.add('visible')};
+function finishSessionCheck(){document.documentElement.classList.remove('session-checking');$('sessionBoot')?.setAttribute('hidden','');}
+function showSessionRetry(){ $('sessionBootTitle').textContent='تعذر الاتصال بالخادم';$('sessionBootText').textContent='احتفظنا بجلسة الدخول. تحقق من اتصال الإنترنت ثم أعد المحاولة.';$('sessionBootSpinner').style.display='none';$('sessionBootRetry').style.display='inline-block'; }
 async function restoreSupportSession(){
  let saved='';try{saved=localStorage.getItem(SUPPORT_SESSION_KEY)||''}catch(e){}
- if(!saved)return;
+ if(!saved){finishSessionCheck();return false;}
  supportSessionToken=saved;
  try{
   const b=await api('/support/lookup',{});
@@ -419,12 +433,21 @@ async function restoreSupportSession(){
   renderFamily(b.family);$('portalGreeting').textContent=b.family.name?`أهلاً بك، ${b.family.name}`:'أهلاً وسهلاً بك';
   $('challengeForm').classList.add('hidden');unlockPortal();
   familyNotificationSnapshot=new Map();notificationsInitialized=false;familyRequests=[];portalNotices.length=0;
-  await refreshFamilyNotifications();
+  finishSessionCheck();
+  refreshFamilyNotifications().catch(()=>{});
   if(window.familyNotificationTimer)clearInterval(window.familyNotificationTimer);
   window.familyNotificationTimer=setInterval(()=>{if(document.visibilityState==='visible')refreshFamilyNotifications()},45000);
- }catch(e){supportSessionToken='';verifiedFamily=null;try{localStorage.removeItem(SUPPORT_SESSION_KEY)}catch(err){}}
+  return true;
+ }catch(e){
+  verifiedFamily=null;
+  // Keep the stored token when the failure is a network/server outage. Only clear it when the server explicitly rejects it.
+  if(e instanceof TypeError || !navigator.onLine || !e.status || e.status>=500){showSessionRetry();return false;}
+  supportSessionToken='';try{localStorage.removeItem(SUPPORT_SESSION_KEY)}catch(err){}
+  finishSessionCheck();return false;
+ }
 }
-loadOfficialAnnouncements();window.addEventListener('online',loadOfficialAnnouncements);window.setInterval(()=>{if(document.visibilityState==='visible')loadOfficialAnnouncements()},60000);
+$('sessionBootRetry').addEventListener('click',async()=>{$('sessionBootRetry').style.display='none';$('sessionBootSpinner').style.display='block';$('sessionBootTitle').textContent='جارٍ التحقق من جلسة الدخول';$('sessionBootText').textContent='يرجى الانتظار لحظات حتى نجهّز بوابتك.';await restoreSupportSession()});
+loadOfficialAnnouncements();window.addEventListener('online',()=>{loadOfficialAnnouncements();if(document.documentElement.classList.contains('session-checking'))$('sessionBootRetry').click()});window.setInterval(()=>{if(document.visibilityState==='visible')loadOfficialAnnouncements()},60000);
 restoreSupportSession();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script></body></html>
