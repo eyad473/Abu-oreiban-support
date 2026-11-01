@@ -229,6 +229,21 @@ html.session-checking #sessionBoot{display:flex}
 #sessionBootRetry{display:none;margin:18px auto 0;padding:11px 22px;border:0;border-radius:12px;background:#176b87;color:#fff;font:inherit;font-weight:700}
 .pi{width:1.2em;height:1.2em;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.home-shortcut i{display:grid;place-items:center}.home-shortcut i .pi{width:1em;height:1em;stroke-width:2.2}.home-dashboard-mark .pi{width:1.1em;height:1.1em}
 </style>
+
+<style>
+/* Personal ownership credit — discreet and consistent with the portal identity */
+.footer-credit{margin-top:8px;color:#176b78;font-size:12px;font-weight:700;letter-spacing:.1px}
+.footer-credit strong{color:#102b46;font-weight:800}
+.footer-rights{margin-top:3px;color:#82909c;font-size:10px;line-height:1.8}
+.gate-credit{display:inline-block;margin-top:5px;color:#176b78;font-size:11px;font-weight:800}
+
+/* Developer credit styled to match the portal's navy and teal visual identity */
+.footer-credit-block{display:flex;flex-direction:column;align-items:center;gap:3px;padding:16px 12px 18px;text-align:center}
+.footer-credit-label{color:#176b78;font-size:11px;font-weight:700;letter-spacing:.35px}
+.footer-credit-name{color:#102b46;font-size:15px;font-weight:900;letter-spacing:.25px}
+.footer-credit-block .footer-rights{color:#82909c;font-size:10px;line-height:1.6;margin-top:1px}
+.gate-foot.footer-credit-block{margin-top:15px}
+</style>
 </head>
 <body>
 <div id="sessionBoot" role="status" aria-live="polite"><div class="session-boot-card"><div class="session-boot-mark" aria-hidden="true">⌂</div><strong id="sessionBootTitle">جارٍ التحقق من جلسة الدخول</strong><p id="sessionBootText">يرجى الانتظار لحظات حتى نجهّز بوابتك.</p><div id="sessionBootSpinner" class="session-boot-spinner" aria-hidden="true"></div><button id="sessionBootRetry" type="button">إعادة المحاولة</button></div></div>
@@ -240,7 +255,7 @@ html.session-checking #sessionBoot{display:flex}
     <form id="challengeForm" class="hidden"><div class="notice">للتأكد من هويتك، أجب عن أسئلة التحقق التالية كما هي مسجلة في بيانات الأسرة.</div><div id="challengeQuestions" class="fields"></div><div class="actions"><button class="btn" id="verifyBtn">تأكيد الهوية</button><button type="button" class="btn secondary" id="restartBtn">رجوع</button></div></form>
     <div id="lookupMsg" class="message"></div>
     <div class="gate-security"><svg class="official-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg><div><b>خصوصيتك مهمة</b><br>لن تظهر بيانات الأسرة أو الخدمات قبل إتمام التحقق. لا تشارك رقم هويتك أو إجابات التحقق مع الآخرين.</div></div>
-  </div><div class="gate-foot">مخيم أبو عريبان · بوابة آمنة لخدمة الأهالي · © 2026</div>
+  </div><div class="gate-foot footer-credit-block"><span class="footer-credit-label">Developed &amp; Designed by</span><strong class="footer-credit-name">Abu Omar Albaik</strong><span class="footer-rights">© 2026 All Rights Reserved</span></div>
 </div></section>
 <div id="portalToast" role="status" aria-live="polite"></div>
 
@@ -291,7 +306,7 @@ html.session-checking #sessionBoot{display:flex}
 <div id="submitMsg" class="message"></div><div id="ticketResult" class="result"></div>
 </section>
 <section id="tab-notifications" class="card hidden"><div class="section-heading"><div><h3>إشعارات طلباتك</h3><p class="sub" style="margin:3px 0 0">تظهر هنا ردود إدارة المخيم وأي تحديث على طلباتك.</p></div><button type="button" class="btn secondary" id="refreshNotifications">تحديث</button></div><div id="notificationList" class="notice-list"><div class="notification-empty">لا توجد إشعارات بعد. ستظهر هنا ردود الإدارة والتحديثات عند توفرها.</div></div></section>
-<div class="footer">بوابة مستقلة لخدمة أهالي مخيم أبو عريبان · جميع الحقوق محفوظة © 2026</div>
+<div class="footer footer-credit-block"><span class="footer-credit-label">Developed &amp; Designed by</span><strong class="footer-credit-name">Abu Omar Albaik</strong><span class="footer-rights">© 2026 All Rights Reserved</span></div>
 </main>
 <script>
 const API='https://moood.eyad2000515.workers.dev';
