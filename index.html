@@ -542,18 +542,19 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',as
 const hiddenFamilyFields=/(اسم رب الأسرة|رقم الجوال|الجوال|الهاتف|داخل.?خارج|داخل المخيم|خارج المخيم|حالة الإقامة|مكان الإقامة|عنوان|العنوان|اكتمال بيانات الأسرة|حالة اكتمال|اكتمال البيانات)/i;
 const hiddenMemberFields=/(رقم\s*جوال\s*بديل|جوال\s*بديل|هاتف\s*بديل|رقم\s*الجوال|الجوال|الهاتف|رقم\s*هاتف|المحافظة\s*الأصلية|حالة\s*السكن\s*الأصلية|حالة\s*السكن\s*الأصلي|حالة\s*المسكن\s*الأصلي|نوع\s*السكن\s*الحالي|رقم\s*هوية\s*الأسرة|اسم\s*رب\s*الأسرة|داخل\s*المخيم|خارج\s*المخيم|داخل.?خارج|العنوان|عنوان|اكتمال\s*بيانات\s*الأسرة|حالة\s*اكتمال|اكتمال\s*البيانات)/i;
 const healthGroups=[
- {id:'chronic',label:'مرض مزمن',icon:'✚',tone:'chronic',flag:/(مرض\s*مزمن|أمراض?\s*مزمنة|يعاني\s*من\s*مرض|مصاب\s*بمرض)/i,detail:/(تفاصيل|سبب|نوع\s*المرض|اسم\s*المرض|شرح|ما\s*هو\s*المرض)/i},
- {id:'disability',label:'إعاقة',icon:'♿',tone:'disability',flag:/(إعاقة|ذوي.*إعاقة|معاق)/i,detail:/(تفاصيل|سبب|نوع|درجة|شرح|طبيعة)/i},
- {id:'pregnancy',label:'حامل',icon:'＋',tone:'pregnancy',flag:/(حامل|الحمل|هل\s*هي\s*حامل)/i,detail:/(تفاصيل|شهر\s*الحمل|أشهر\s*الحمل|مدة\s*الحمل|شرح)/i},
- {id:'breastfeeding',label:'مرضعة',icon:'♡',tone:'breastfeeding',flag:/(مرضعة|رضاعة\s*طبيعية|ترضع|الإرضاع)/i,detail:/(تفاصيل|عمر\s*الرضيع|مدة\s*الرضاعة|شرح)/i},
- {id:'injury',label:'إصابة',icon:'✚',tone:'injury',flag:/(إصابة|مصاب|إصابات|جريح|جرح)/i,detail:/(تفاصيل|سبب|نوع|مكان|شرح|طبيعة|وصف)/i}
+ {id:'chronic',label:'مرض مزمن',icon:'✚',tone:'chronic',flag:/(مرض\s*مزمن|أمراض?\s*مزمنة|يعاني\s*من\s*مرض|مصاب\s*بمرض|هل\s*يوجد\s*مرض)/i,detail:/(تفاصيل|سبب|نوع\s*المرض|اسم\s*المرض|شرح|ما\s*هو\s*المرض|المرض\s*المزمن)/i},
+ {id:'disability',label:'إعاقة',icon:'♿',tone:'disability',flag:/(إعاقة|ذوي.*إعاقة|معاق|هل\s*يوجد.*إعاقة)/i,detail:/(تفاصيل|سبب|نوع|درجة|شرح|طبيعة|وصف)/i},
+ {id:'pregnancy',label:'حامل',icon:'＋',tone:'pregnancy',flag:/(حامل|الحمل|هل\s*هي\s*حامل|هل\s*يوجد.*حمل)/i,detail:/(تفاصيل|شهر\s*الحمل|أشهر\s*الحمل|مدة\s*الحمل|شرح)/i},
+ {id:'breastfeeding',label:'مرضعة',icon:'♡',tone:'breastfeeding',flag:/(مرضعة|رضاعة\s*طبيعية|ترضع|الإرضاع|هل\s*هي\s*مرضعة)/i,detail:/(تفاصيل|عمر\s*الرضيع|مدة\s*الرضاعة|شرح)/i},
+ {id:'injury',label:'إصابة',icon:'✚',tone:'injury',flag:/(إصابة|مصاب|إصابات|جريح|جرح|هل\s*يوجد.*إصابة)/i,detail:/(تفاصيل|سبب|نوع|مكان|شرح|طبيعة|وصف)/i}
 ];
-function cleanFieldKey(v){return String(v??'').replace(/[؟?]/g,'').replace(/[ـ]/g,'').replace(/\s+/g,' ').trim();}
-function isYes(v){return /^(نعم|أجل|اجل|يوجد|مصاب|يعاني|حامل|مرضعة|yes|y|1|true)$/i.test(String(v??'').trim());}
-function isNo(v){return /^(لا|كلا|لا يوجد|لايوجد|غير موجود|غير مصاب|غير معاق|لا يعاني|ليس لديه|ليس لها|no|n|0|false|لا ينطبق)$/i.test(String(v??'').trim());}
+function normalizeHealthText(v){return String(v??'').normalize('NFKC').replace(/[\u064B-\u065F\u0670]/g,'').replace(/ـ/g,'').replace(/[أإآٱ]/g,'ا').replace(/[ى]/g,'ي').replace(/[؟?]/g,'').replace(/[ًٌٍَُِّْ]/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
+function cleanFieldKey(v){return normalizeHealthText(v);}
+function isYes(v){if(v===true||v===1)return true;const x=normalizeHealthText(v);return /^(نعم|اجل|يوجد|موجود|مصاب|يعاني|حامل|مرضعة|yes|y|1|true)(\b|\s|[-،,:：])/i.test(x);}
+function isNo(v){if(v===false||v===0)return true;const x=normalizeHealthText(v);return /^(لا|كلا|لا يوجد|لايوجد|غير موجود|غير مصاب|غير معاق|لا يعاني|ليس لديه|ليس لها|no|n|0|false|لا ينطبق)(\b|\s|[-،,:：])/i.test(x);}
 function healthFlagGroup(key){const k=cleanFieldKey(key);return healthGroups.find(g=>g.flag.test(k)&&!g.detail.test(k));}
-function healthDetailGroup(key){const k=cleanFieldKey(key);return healthGroups.find(g=>g.detail.test(k)&&(g.flag.test(k)||(g.id==='chronic'&&/مرض/.test(k))||(g.id==='pregnancy'&&/حمل/.test(k))||(g.id==='breastfeeding'&&/رضاع|رضيع/.test(k))));}
-function isHealthField(key){return !!healthFlagGroup(key)||!!healthDetailGroup(key);}
+function healthDetailGroup(key){const k=cleanFieldKey(key);return healthGroups.find(g=>g.detail.test(k)&&((g.id==='chronic'&&/مرض/.test(k))||(g.id==='disability'&&/اعاق|عجز|نوع|درجة|طبيعة/.test(k))||(g.id==='pregnancy'&&/حمل|شهر/.test(k))||(g.id==='breastfeeding'&&/رضاع|رضيع/.test(k))||(g.id==='injury'&&/اصاب|جرح|سبب|مكان/.test(k))));}
+function isHealthField(key){return !!healthFlagGroup(key)||!!healthDetailGroup(key)||healthGroups.some(g=>g.flag.test(cleanFieldKey(key))||g.detail.test(cleanFieldKey(key)));}
 function healthItemsFor(person){
  const entries=Object.entries(person||{}).filter(([k,v])=>String(v??'').trim()!=='');
  const items=[];
