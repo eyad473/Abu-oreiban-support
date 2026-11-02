@@ -231,6 +231,31 @@ html.session-checking #sessionBoot{display:flex}
 </style>
 
 <style>
+
+/* Official family health profile */
+.health-section{margin:18px 0 22px;padding:16px;border:1px solid #d9e5ec;border-radius:18px;background:linear-gradient(145deg,#f8fbfd,#fff);box-shadow:0 8px 22px #173b5a08}
+.health-section-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.health-section-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#e8f2f5;color:#176b78;font-size:21px}
+.health-section-head h3{margin:0;color:#102b46;font-size:16px}.health-section-head p{margin:3px 0 0;color:#718293;font-size:10px;line-height:1.7}
+.health-person{padding:13px;margin-top:10px;border:1px solid #e0e8ed;border-radius:15px;background:#fff}
+.health-person-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.health-person-head b{display:block;color:#17334a;font-size:13px}.health-person-head small{display:block;margin-top:2px;color:#7b8b98;font-size:10px}
+.health-person-count{padding:5px 9px;border-radius:99px;background:#edf3f7;color:#50697d;font-size:10px;font-weight:800;white-space:nowrap}
+.health-tags{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.health-tag{min-width:0;padding:10px;border:1px solid var(--health-edge);border-right:4px solid var(--health-accent);border-radius:12px;background:var(--health-bg)}
+.health-tag-title{display:flex;align-items:center;gap:6px;color:var(--health-accent);font-size:12px}
+.health-symbol{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:#ffffffb8;font-size:14px}
+.health-yes{margin-inline-start:auto;padding:2px 7px;border-radius:99px;background:#ffffffc9;color:var(--health-accent);font-size:9px;font-weight:900}
+.health-detail{margin-top:8px;padding-top:7px;border-top:1px solid var(--health-edge);overflow-wrap:anywhere}
+.health-detail small{display:block;color:#6d7e8c;font-size:9px}.health-detail strong{display:block;margin-top:2px;color:#263e51;font-size:11px;line-height:1.7}
+.health-chronic{--health-accent:#a34d21;--health-bg:#fff4eb;--health-edge:#f0d5c1}
+.health-disability{--health-accent:#6546a5;--health-bg:#f5f0ff;--health-edge:#ded2f4}
+.health-pregnancy{--health-accent:#b04479;--health-bg:#fff0f6;--health-edge:#f1d0df}
+.health-breastfeeding{--health-accent:#147b78;--health-bg:#eaf8f6;--health-edge:#c8e9e4}
+.health-injury{--health-accent:#b13d3d;--health-bg:#fff0ef;--health-edge:#f0cecb}
+.health-empty{padding:13px;border:1px dashed #cbd9e3;border-radius:13px;background:#f8fbfd;color:#758696;font-size:11px;line-height:1.8}
+@media(max-width:600px){.health-section{padding:13px}.health-tags{grid-template-columns:1fr}}
+
 /* Personal ownership credit — discreet and consistent with the portal identity */
 .footer-credit{margin-top:8px;color:#176b78;font-size:12px;font-weight:700;letter-spacing:.1px}
 .footer-credit strong{color:#102b46;font-weight:800}
@@ -517,26 +542,37 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',as
 const hiddenFamilyFields=/(اسم رب الأسرة|رقم الجوال|الجوال|الهاتف|داخل.?خارج|داخل المخيم|خارج المخيم|حالة الإقامة|مكان الإقامة|عنوان|العنوان|اكتمال بيانات الأسرة|حالة اكتمال|اكتمال البيانات)/i;
 const hiddenMemberFields=/(رقم\s*جوال\s*بديل|جوال\s*بديل|هاتف\s*بديل|رقم\s*الجوال|الجوال|الهاتف|رقم\s*هاتف|المحافظة\s*الأصلية|حالة\s*السكن\s*الأصلية|حالة\s*السكن\s*الأصلي|حالة\s*المسكن\s*الأصلي|نوع\s*السكن\s*الحالي|رقم\s*هوية\s*الأسرة|اسم\s*رب\s*الأسرة|داخل\s*المخيم|خارج\s*المخيم|داخل.?خارج|العنوان|عنوان|اكتمال\s*بيانات\s*الأسرة|حالة\s*اكتمال|اكتمال\s*البيانات)/i;
 const healthGroups=[
- {id:'chronic',flag:/(مرض\s*مزمن|أمراض?\s*مزمنة|يعاني\s*من\s*مرض|مصاب\s*بمرض)/i,detail:/(تفاصيل|سبب|نوع\s*المرض|اسم\s*المرض|شرح)/i,label:'المرض المزمن'},
- {id:'injury',flag:/(إصابة|مصاب|إصابات)/i,detail:/(تفاصيل|سبب|نوع|مكان|شرح)/i,label:'الإصابة'},
- {id:'disability',flag:/(إعاقة|ذوي.*إعاقة|معاق)/i,detail:/(تفاصيل|سبب|نوع|درجة|شرح)/i,label:'الإعاقة'}
+ {id:'chronic',label:'مرض مزمن',icon:'✚',tone:'chronic',flag:/(مرض\s*مزمن|أمراض?\s*مزمنة|يعاني\s*من\s*مرض|مصاب\s*بمرض)/i,detail:/(تفاصيل|سبب|نوع\s*المرض|اسم\s*المرض|شرح|ما\s*هو\s*المرض)/i},
+ {id:'disability',label:'إعاقة',icon:'♿',tone:'disability',flag:/(إعاقة|ذوي.*إعاقة|معاق)/i,detail:/(تفاصيل|سبب|نوع|درجة|شرح|طبيعة)/i},
+ {id:'pregnancy',label:'حامل',icon:'＋',tone:'pregnancy',flag:/(حامل|الحمل|هل\s*هي\s*حامل)/i,detail:/(تفاصيل|شهر\s*الحمل|أشهر\s*الحمل|مدة\s*الحمل|شرح)/i},
+ {id:'breastfeeding',label:'مرضعة',icon:'♡',tone:'breastfeeding',flag:/(مرضعة|رضاعة\s*طبيعية|ترضع|الإرضاع)/i,detail:/(تفاصيل|عمر\s*الرضيع|مدة\s*الرضاعة|شرح)/i},
+ {id:'injury',label:'إصابة',icon:'✚',tone:'injury',flag:/(إصابة|مصاب|إصابات|جريح|جرح)/i,detail:/(تفاصيل|سبب|نوع|مكان|شرح|طبيعة|وصف)/i}
 ];
 function cleanFieldKey(v){return String(v??'').replace(/[؟?]/g,'').replace(/[ـ]/g,'').replace(/\s+/g,' ').trim();}
-function isYes(v){return /^(نعم|أجل|اجل|يوجد|مصاب|يعاني|yes|y|1|true)$/i.test(String(v??'').trim());}
+function isYes(v){return /^(نعم|أجل|اجل|يوجد|مصاب|يعاني|حامل|مرضعة|yes|y|1|true)$/i.test(String(v??'').trim());}
 function isNo(v){return /^(لا|كلا|لا يوجد|لايوجد|غير موجود|غير مصاب|غير معاق|لا يعاني|ليس لديه|ليس لها|no|n|0|false|لا ينطبق)$/i.test(String(v??'').trim());}
-function healthFlagGroup(key){return healthGroups.find(g=>g.flag.test(cleanFieldKey(key))&&!g.detail.test(cleanFieldKey(key)));}
-function healthDetailGroup(key){const k=cleanFieldKey(key);return healthGroups.find(g=>g.detail.test(k)&&(g.flag.test(k)||(g.id==='chronic'&&/مرض/.test(k))));}
+function healthFlagGroup(key){const k=cleanFieldKey(key);return healthGroups.find(g=>g.flag.test(k)&&!g.detail.test(k));}
+function healthDetailGroup(key){const k=cleanFieldKey(key);return healthGroups.find(g=>g.detail.test(k)&&(g.flag.test(k)||(g.id==='chronic'&&/مرض/.test(k))||(g.id==='pregnancy'&&/حمل/.test(k))||(g.id==='breastfeeding'&&/رضاع|رضيع/.test(k))));}
+function isHealthField(key){return !!healthFlagGroup(key)||!!healthDetailGroup(key);}
+function healthItemsFor(person){
+ const entries=Object.entries(person||{}).filter(([k,v])=>String(v??'').trim()!=='');
+ const items=[];
+ for(const group of healthGroups){
+  const flag=entries.find(([key])=>healthFlagGroup(key)?.id===group.id);
+  if(!flag||!isYes(flag[1]))continue;
+  const details=entries.filter(([key,value])=>healthDetailGroup(key)?.id===group.id&&!isNo(value)&&String(value??'').trim()!==''&&!isYes(value)).map(([,value])=>String(value).trim());
+  items.push({group,details:[...new Set(details)]});
+ }
+ return items;
+}
+function healthMarkup(person,name,relation){
+ const items=healthItemsFor(person);
+ if(!items.length)return '';
+ return `<article class="health-person"><div class="health-person-head"><div><b>${esc(name)}</b><small>${esc(relation||'أحد أفراد الأسرة')}</small></div><span class="health-person-count">${items.length} ${items.length===1?'حالة':'حالات'}</span></div><div class="health-tags">${items.map(({group,details})=>`<div class="health-tag health-${group.tone}"><div class="health-tag-title"><span class="health-symbol">${group.icon}</span><b>${group.label}</b><span class="health-yes">نعم</span></div>${details.length?`<div class="health-detail"><small>التفاصيل المسجلة</small><strong>${details.map(esc).join('، ')}</strong></div>`:'<div class="health-detail"><small>لا توجد تفاصيل إضافية مسجلة</small></div>'}</div>`).join('')}</div></article>`;
+}
 function memberFieldVisible(key,value,entries){
  const k=cleanFieldKey(key),v=String(value??'').trim();
- if(hiddenMemberFields.test(k)||!v||isNo(v))return false;
- const flagGroup=healthFlagGroup(k);
- if(flagGroup)return isYes(v);
- const detailGroup=healthDetailGroup(k);
- if(detailGroup){
-  const flagEntry=entries.find(([field])=>healthFlagGroup(field)?.id===detailGroup.id);
-  return !!flagEntry&&isYes(flagEntry[1]);
- }
- // Any explicit negative answer is omitted; ordinary non-health fields remain visible.
+ if(hiddenMemberFields.test(k)||!v||isNo(v)||isHealthField(k))return false;
  return true;
 }
 function showFields(obj,mode='family'){
@@ -551,14 +587,21 @@ function renderFamily(f){
  const fields=f.fields||{};
  const orderedFamily=[['المحافظة الأصلية',firstValue(fields,['المحافظة الأصلية'])],['حالة السكن الأصلي',firstValue(fields,['حالة السكن الأصلي','حالة المسكن الأصلي','حالة السكن الأصلية'])],['نوع السكن الحالي',firstValue(fields,['نوع السكن الحالي'])]];
  const housingDetails=orderedFamily.filter(x=>x[1]).map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('');
- const familyExtra=Object.entries(fields).filter(([k,v])=>String(v??'').trim()!==''&&!hiddenFamilyFields.test(k)&&!/(المحافظة الأصلية|حالة السكن الأصلية|حالة المسكن الأصلي|حالة السكن الأصلي|نوع السكن الحالي)/.test(k));
+ const familyExtra=Object.entries(fields).filter(([k,v])=>String(v??'').trim()!==''&&!hiddenFamilyFields.test(k)&&!isHealthField(k)&&!/(المحافظة الأصلية|حالة السكن الأصلية|حالة المسكن الأصلي|حالة السكن الأصلي|نوع السكن الحالي)/.test(k));
  const familyDetails=familyExtra.map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('');
  const familyId=firstValue(fields,['رقم هوية الأسرة'])||String(f.familyId||$('familyId').value.trim());
  const phone=firstValue(fields,['رقم الجوال'])||firstValue(f.members?.[0],['رقم الجوال']);
  $('portalGreeting').textContent='أهلاً بك، '+familyName;$('homeFamilyCount').textContent=String(Number(f.count||f.members?.length||0));
  $('digitalFamilyName').textContent=familyName;$('digitalFamilyId').textContent=familyId||'—';$('digitalFamilyCount').textContent=String(Number(f.count||f.members?.length||0))+' أفراد';$('digitalFamilyPhone').textContent=phone||'—';
+ const memberList=[...(f.members||[])];
+ const headMember=memberList.find(m=>/رب.?الأسرة/.test(firstValue(m,['صلة القرابة'])));
+ const headData=headMember?{...fields,...headMember}:fields;
+ const headHealth=healthMarkup(headData,familyName,'رب الأسرة');
+ const spouseAndMembers=memberList.filter(m=>m!==headMember).map(m=>healthMarkup(m,firstValue(m,['اسم الفرد','الاسم','اسم الزوجة'])||'فرد الأسرة',firstValue(m,['صلة القرابة']))).join('');
+ const healthContent=headHealth+spouseAndMembers;
+ const healthSection=`<section class="health-section"><div class="health-section-head"><span class="health-section-mark">✚</span><div><h3>الحالة الصحية للأسرة</h3><p>الحالات المثبتة بنعم في السجل الرسمي، مع التفاصيل المسجلة لكل فرد.</p></div></div>${healthContent||'<div class="health-empty">لا توجد حالات صحية مثبتة بنعم في السجل الرسمي للأسرة.</div>'}</section>`;
  $('familyResult').className='result show';
- $('familyResult').innerHTML=`<div class="profile-summary"><div><strong>${esc(familyName)}</strong><small>بيانات رب الأسرة</small></div><span class="pill">تم التحقق</span></div><div class="members-heading"><div><h3>معلومات السكن والأسرة</h3><p class="sub">بيانات مستقلة عن معلومات الأفراد.</p></div></div><div class="kv housing-details">${housingDetails||'<div class="member-empty">لا تتوفر معلومات السكن في السجل حالياً</div>'}</div>${familyDetails?`<div class="members-heading"><div><h3>بيانات الأسرة الإضافية</h3></div></div><div class="kv">${familyDetails}</div>`:''}<div class="members-heading"><div><h3>أفراد الأسرة</h3><p class="sub">الاسم، رقم الهوية، تاريخ الميلاد، والعمر بترتيب واضح.</p></div><span class="members-count">${Number(f.count||f.members?.length||0)} أفراد</span></div>${[...(f.members||[])].sort((a,b)=>{const rank=x=>{const r=supportRelationRank(firstValue(x,['صلة القرابة']));return r};return rank(a)-rank(b)}).map((m,i)=>{
+ $('familyResult').innerHTML=`<div class="profile-summary"><div><strong>${esc(familyName)}</strong><small>بيانات رب الأسرة</small></div><span class="pill">تم التحقق</span></div>${healthSection}<div class="members-heading"><div><h3>معلومات السكن والأسرة</h3><p class="sub">بيانات مستقلة عن معلومات الأفراد.</p></div></div><div class="kv housing-details">${housingDetails||'<div class="member-empty">لا تتوفر معلومات السكن في السجل حالياً</div>'}</div>${familyDetails?`<div class="members-heading"><div><h3>بيانات الأسرة الإضافية</h3></div></div><div class="kv">${familyDetails}</div>`:''}<div class="members-heading"><div><h3>أفراد الأسرة</h3><p class="sub">الاسم، رقم الهوية، تاريخ الميلاد، والعمر بترتيب واضح.</p></div><span class="members-count">${Number(f.count||f.members?.length||0)} أفراد</span></div>${[...(f.members||[])].sort((a,b)=>{const rank=x=>{const r=supportRelationRank(firstValue(x,['صلة القرابة']));return r};return rank(a)-rank(b)}).map((m,i)=>{
   const rel=firstValue(m,['صلة القرابة']);
   const personName=firstValue(m,['اسم الفرد','الاسم','اسم رب الأسرة'])||(rel==='رب الأسرة'?familyName:'فرد الأسرة');
   const personId=firstValue(m,['رقم هوية الفرد','رقم الهوية','رقم هوية الأسرة']);
