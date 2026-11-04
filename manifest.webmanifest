@@ -3,8 +3,8 @@
   "short_name": "مخيم أبو عريبان",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#f4f7fa",
+  "theme_color": "#0b2440",
   "dir": "rtl",
   "lang": "ar"
 }
