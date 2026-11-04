@@ -343,6 +343,13 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
 .notification-search{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink);margin-bottom:10px}
 .notification-search:focus-visible{outline:3px solid #d8efff;outline-offset:1px}
 </style>
+<style id="family-correction-style">
+.family-correction-panel{margin-top:16px;padding:18px;border:1px solid var(--border,#d5e2e7);border-radius:16px;background:var(--card,#fff)}
+.family-correction-panel textarea[readonly]{background:#f3f7f8;color:#34495b;resize:vertical}
+.family-correction-panel .actions{margin-top:12px}
+.family-correction-panel select{width:100%;max-width:100%}
+@media(max-width:540px){.family-correction-panel{padding:13px}.family-correction-panel .actions .btn{width:100%}}
+</style>
 </head>
 <body>
 <div id="sessionBoot" role="status" aria-live="polite"><div class="session-boot-card"><div class="session-boot-mark" aria-hidden="true">⌂</div><strong id="sessionBootTitle">جارٍ التحقق من جلسة الدخول</strong><p id="sessionBootText">يرجى الانتظار لحظات حتى نجهّز بوابتك.</p><div id="sessionBootSpinner" class="session-boot-spinner" aria-hidden="true"></div><button id="sessionBootRetry" type="button">إعادة المحاولة</button></div></div>
@@ -390,6 +397,14 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
 <section id="tab-data" class="card">
 <h3>بيانات الأسرة</h3><p class="sub">تم فتح البوابة بعد التحقق من الهوية. يمكنك مراجعة بيانات الأسرة وإرسال طلب تصحيح إذا لاحظت أي خطأ.</p>
 <div id="familyResult" class="result"></div>
+<section id="familyCorrectionPanel" class="family-correction-panel hidden" aria-labelledby="familyCorrectionTitle">
+ <div class="section-heading"><div><h3 id="familyCorrectionTitle">طلب تصحيح بيان من سجل الأسرة</h3><p class="sub">اختر البيان المسجل، ثم اكتب القيمة الصحيحة. لن يُعدّل السجل إلا بعد مراجعة الإدارة واعتماد الطلب.</p></div></div>
+ <div class="fields"><div class="field full"><label for="correctionField">البيان المطلوب تصحيحه</label><select id="correctionField"><option value="">اختر بياناً من سجلك</option></select></div>
+ <div class="field full"><label for="correctionCurrent">القيمة المسجلة حالياً</label><textarea id="correctionCurrent" rows="2" readonly aria-readonly="true"></textarea></div>
+ <div class="field full"><label for="correctionProposed">القيمة الصحيحة المقترحة</label><textarea id="correctionProposed" rows="2" maxlength="600" placeholder="اكتب القيمة الصحيحة كما يجب أن تظهر في السجل"></textarea></div></div>
+ <div class="actions"><button type="button" class="btn" id="prepareCorrection">تجهيز طلب التصحيح</button></div>
+ <p id="correctionFeedback" class="sub" role="status" aria-live="polite"></p>
+</section>
 <section class="card" id="serviceGuideSection"><div class="section-heading"><div><h3>دليل خدمات وموقع المخيم</h3><p class="sub" style="margin:3px 0 0">روابط إرشادية للوصول إلى موقع المخيم</p></div><span class="pill">دليل الوصول</span></div><div class="service-guide"><div class="service-guide-item"><div class="service-guide-icon">⌖</div><div><b>موقع مخيم أبو عريبان</b><small>افتح موقع المخيم على الخريطة للوصول إلى المنطقة.</small></div></div><div class="service-guide-item"><div class="service-guide-icon">ℹ</div><div><b>معلومات الخدمات</b><small>سيتم إضافة نقاط الخدمات المعتمدة بعد تزويد البوابة بمواقعها الرسمية.</small></div></div></div><a class="guide-map-link" href="https://maps.app.goo.gl/7123cttNb1dUYTMK9" target="_blank" rel="noopener noreferrer"><div>فتح موقع المخيم على الخريطة<span>يفتح تطبيق الخرائط أو المتصفح</span></div><b aria-hidden="true">←</b></a><div class="notice">لم نضع علامات لمراكز مياه أو تعليم أو صحة دون إحداثيات مؤكدة؛ يمكن إضافتها لاحقاً عند اعتماد مواقعها من إدارة المخيم.</div></section>
 
 <div class="notice">إذا وجدت معلومة غير صحيحة، أرسل طلب تحديث بيانات. لن يتغير السجل الرسمي إلا بعد مراجعة إدارة المخيم واعتماد التعديل.</div>
@@ -713,8 +728,70 @@ function showFields(obj,mode='family'){
 function firstValue(obj,keys){for(const k of keys){const v=obj?.[k];if(v!==undefined&&v!==null&&String(v).trim()!=='')return String(v).trim()}return ''}
 function supportRelationRank(rel){if(/رب.?الأسرة/.test(rel))return 0;if(/زوجة|الزوجة/.test(rel))return 1;return 2}
 function derivedAge(birth){const raw=String(birth||'').trim().replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));let y=0,m=1,d=1;let a=raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);if(a){y=+a[1];m=+a[2];d=+a[3]}else{a=raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);if(a){d=+a[1];m=+a[2];y=+a[3]}else{a=raw.match(/^(19\d{2}|20\d{2})$/);if(a){y=+a[1];const n=new Date();return Math.max(0,n.getFullYear()-y)+' سنة تقريباً'}}}if(!y||y<1900||y>new Date().getFullYear()||m<1||m>12||d<1||d>31)return '';const now=new Date();let age=now.getFullYear()-y;if(now.getMonth()+1<m||(now.getMonth()+1===m&&now.getDate()<d))age--;return age>=0?age+' سنة':''}
+// بيانات التصحيح تُحفظ مؤقتاً في الذاكرة فقط؛ لا تعديل مباشر للسجل أو تخزين محلي.
+let correctionChoices=[];
+function resetCorrectionEditor(){
+ correctionChoices=[];
+ const selector=$('correctionField');if(selector)selector.replaceChildren(new Option('اختر بياناً من سجلك',''));
+ if($('correctionCurrent'))$('correctionCurrent').value='';
+ if($('correctionProposed'))$('correctionProposed').value='';
+ if($('correctionFeedback'))$('correctionFeedback').textContent='';
+ if($('familyCorrectionPanel'))$('familyCorrectionPanel').classList.add('hidden');
+}
+function buildCorrectionChoices(f){
+ resetCorrectionEditor();if(!f)return;
+ const choices=[];
+ const add=(owner,key,value)=>{
+  if(value===null||value===undefined||typeof value==='object')return;
+  const val=String(value).trim();if(!val||isHealthField(key)||/^(?:العمر|العمر التقريبي)$/.test(key))return;
+  if(choices.length>=150)return;
+  choices.push({label:owner+' — '+key,current:val});
+ };
+ const fields=f.fields||{};
+ Object.entries(fields).forEach(([key,value])=>add('الأسرة',key,value));
+ (f.members||[]).forEach((member,index)=>{
+  const person=firstValue(member,['اسم الفرد','الاسم','اسم رب الأسرة'])||'فرد '+(index+1);
+  Object.entries(member||{}).forEach(([key,value])=>{
+   if(/^(?:اسم الفرد|الاسم|اسم رب الأسرة)$/.test(key))return;
+   add(person,key,value);
+  });
+ });
+ correctionChoices=choices;
+ const select=$('correctionField');
+ choices.forEach((choice,i)=>select.add(new Option(choice.label,String(i))));
+ $('familyCorrectionPanel').classList.toggle('hidden',choices.length===0);
+ $('correctionFeedback').textContent=choices.length?'اختر البيان المطلوب مراجعته.':'لا توجد بيانات متاحة لاختيارها.';
+}
+$('correctionField').addEventListener('change',()=>{
+ const idx=$('correctionField').value;
+ $('correctionCurrent').value=idx===''?'':(correctionChoices[Number(idx)]?.current||'');
+ $('correctionProposed').value='';$('correctionFeedback').textContent='';
+});
+$('prepareCorrection').addEventListener('click',()=>{
+ if(!verifiedFamily){$('correctionFeedback').textContent='يرجى التحقق من الهوية أولاً.';return;}
+ const idx=$('correctionField').value,choice=idx===''?null:correctionChoices[Number(idx)];
+ const proposed=$('correctionProposed').value.trim();
+ if(!choice){$('correctionFeedback').textContent='اختر البيان الذي تريد تصحيحه.';return;}
+ if(!proposed){$('correctionFeedback').textContent='اكتب القيمة الصحيحة المقترحة.';$('correctionProposed').focus();return;}
+ if(proposed===choice.current){$('correctionFeedback').textContent='القيمة المقترحة مطابقة للقيمة المسجلة؛ يرجى مراجعتها.';return;}
+ const changes=`البيان: ${choice.label}\nالقيمة الحالية: ${choice.current}\nالقيمة المقترحة: ${proposed}`;
+ if(changes.length>2000){$('correctionFeedback').textContent='النص طويل جداً. يرجى اختصار القيمة المقترحة.';return;}
+ const existing=$('subject').value.trim()||'طلب تصحيح بيانات الأسرة';
+ if($('requestForm').dataset.correctionPrepared==='yes' && $('requestedChanges').value.trim() && $('requestedChanges').value.trim()!==changes){
+  if(!confirm('يوجد طلب تصحيح مُجهّز سابقاً. هل تريد استبداله بالبيان الجديد؟'))return;
+ }
+ $('requestType').value='طلب تحديث بيانات';$('requestType').dispatchEvent(new Event('change'));
+ $('subject').value=existing;
+ $('requestedChanges').value=changes;
+ if(!$('message').value.trim()){$('message').value='أرجو مراجعة البيان الموضح في طلب التحديث واعتماد القيمة الصحيحة بعد التحقق من المستندات.';$('message').dispatchEvent(new Event('input'));}
+ $('requestForm').dataset.correctionPrepared='yes';
+ $('correctionFeedback').textContent='تم تجهيز النموذج. راجع البيانات والمرفقات ثم اضغط إرسال الطلب بنفسك.';
+ tab('request');$('tab-request').scrollIntoView({behavior:'auto',block:'start'});
+ $('requestedChanges').focus();
+});
 function renderFamily(f){
  const familyName=f.name||f.fields?.['اسم رب الأسرة']||'رب الأسرة';
+ buildCorrectionChoices(f);
  const fields=f.fields||{};
  const orderedFamily=[['المحافظة الأصلية',firstValue(fields,['المحافظة الأصلية'])],['حالة السكن الأصلي',firstValue(fields,['حالة السكن الأصلي','حالة المسكن الأصلي','حالة السكن الأصلية'])],['نوع السكن الحالي',firstValue(fields,['نوع السكن الحالي'])]];
  const housingDetails=orderedFamily.filter(x=>x[1]).map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('');
@@ -756,15 +833,15 @@ $('whatsappContactForm').addEventListener('submit',async e=>{e.preventDefault();
 
 function showVerificationSuccess(name){$('welcomeName').textContent=name||'أهلاً بك';$('portalGreeting').textContent=name?`أهلاً بك، ${name}`:'أهلاً وسهلاً بك';$('verifyOverlay').classList.add('show');return new Promise(resolve=>setTimeout(()=>{$('verifyOverlay').classList.remove('show');setTimeout(resolve,280)},1900));}
 $('lookupForm').addEventListener('submit',async e=>{e.preventDefault();$('lookupBtn').disabled=true;$('lookupBtn').classList.add('is-loading');hideMsg('lookupMsg');$('familyResult').className='result';$('challengeForm').classList.add('hidden');verifiedFamily=null;supportSessionToken='';try{const b=await api('/support/challenge',{familyId:$('familyId').value.trim()});activeChallengeId=b.challengeId;$('lookupForm').classList.add('hidden');$('challengeQuestions').innerHTML=(b.questions||[]).map(q=>`<div class="field full"><label for="${esc(q.key)}">${esc(q.label)}</label><input id="${esc(q.key)}" data-answer-key="${esc(q.key)}" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="أدخل الإجابة"></div>`).join('');$('challengeForm').classList.remove('hidden');msg('lookupMsg','تم تجهيز أسئلة التحقق. أكمل الإجابات للمتابعة.','ok');}catch(err){$('lookupForm').classList.remove('hidden');msg('lookupMsg',err.message)}finally{$('lookupBtn').disabled=false;$('lookupBtn').classList.remove('is-loading')}});
-$('challengeForm').addEventListener('submit',async e=>{e.preventDefault();$('verifyBtn').disabled=true;$('verifyBtn').classList.add('is-loading');hideMsg('lookupMsg');try{const answers={};document.querySelectorAll('[data-answer-key]').forEach(el=>answers[el.dataset.answerKey]=el.value.trim());const v=await api('/support/verify',{challengeId:activeChallengeId,answers});supportSessionToken=v.sessionToken;localStorage.setItem(SUPPORT_SESSION_KEY,supportSessionToken);const b=await api('/support/lookup',{});verifiedFamily={...b.family,familyId:$('familyId').value.trim(),phone:b.family.fields?.['رقم الجوال']||b.family.members?.[0]?.['رقم الجوال']||''};loadReadNotifications();renderFamily(b.family);$('challengeForm').classList.add('hidden');$('requestType').dispatchEvent(new Event('change'));await showVerificationSuccess(b.family.name||b.family.fields?.['اسم رب الأسرة']);unlockPortal();await ensureWhatsappContact();familyNotificationSnapshot=new Map();notificationsInitialized=false;portalNotices.length=0;familyRequests=[];renderNotifications();startFamilyNotificationLiveUpdates();}catch(err){supportSessionToken='';verifiedFamily=null;try{localStorage.removeItem(SUPPORT_SESSION_KEY)}catch(e){}msg('lookupMsg',err.message)}finally{$('verifyBtn').disabled=false;$('verifyBtn').classList.remove('is-loading')}});
-$('restartBtn').addEventListener('click',()=>{activeChallengeId='';supportSessionToken='';verifiedFamily=null;$('challengeForm').classList.add('hidden');$('challengeQuestions').innerHTML='';$('lookupForm').classList.remove('hidden');hideMsg('lookupMsg');$('familyResult').className='result'});
+$('challengeForm').addEventListener('submit',async e=>{e.preventDefault();$('verifyBtn').disabled=true;$('verifyBtn').classList.add('is-loading');hideMsg('lookupMsg');try{const answers={};document.querySelectorAll('[data-answer-key]').forEach(el=>answers[el.dataset.answerKey]=el.value.trim());const v=await api('/support/verify',{challengeId:activeChallengeId,answers});supportSessionToken=v.sessionToken;localStorage.setItem(SUPPORT_SESSION_KEY,supportSessionToken);const b=await api('/support/lookup',{});verifiedFamily={...b.family,familyId:$('familyId').value.trim(),phone:b.family.fields?.['رقم الجوال']||b.family.members?.[0]?.['رقم الجوال']||''};loadReadNotifications();renderFamily(b.family);$('challengeForm').classList.add('hidden');$('requestType').dispatchEvent(new Event('change'));await showVerificationSuccess(b.family.name||b.family.fields?.['اسم رب الأسرة']);unlockPortal();await ensureWhatsappContact();familyNotificationSnapshot=new Map();notificationsInitialized=false;portalNotices.length=0;familyRequests=[];renderNotifications();startFamilyNotificationLiveUpdates();}catch(err){supportSessionToken='';verifiedFamily=null;resetCorrectionEditor();try{localStorage.removeItem(SUPPORT_SESSION_KEY)}catch(e){}msg('lookupMsg',err.message)}finally{$('verifyBtn').disabled=false;$('verifyBtn').classList.remove('is-loading')}});
+$('restartBtn').addEventListener('click',()=>{activeChallengeId='';supportSessionToken='';verifiedFamily=null;resetCorrectionEditor();$('challengeForm').classList.add('hidden');$('challengeQuestions').innerHTML='';$('lookupForm').classList.remove('hidden');hideMsg('lookupMsg');$('familyResult').className='result'});
 async function logoutPortal(){
  const token=supportSessionToken;
  try{if(token)await api('/support/logout',{});}catch(e){}
- localStorage.removeItem(SUPPORT_SESSION_KEY);supportSessionToken='';verifiedFamily=null;activeChallengeId='';familyRequests=[];portalNotices.length=0;familyNotificationSnapshot.clear();notificationsInitialized=false;renderNotifications();
+ localStorage.removeItem(SUPPORT_SESSION_KEY);supportSessionToken='';verifiedFamily=null;resetCorrectionEditor();activeChallengeId='';familyRequests=[];portalNotices.length=0;familyNotificationSnapshot.clear();notificationsInitialized=false;renderNotifications();
  stopFamilySyncTimers();
  $('portalMain').classList.add('hidden');$('portalHeader').classList.add('hidden');$('portalGate').classList.remove('hidden');
- $('familyId').value='';$('lookupForm').reset();$('lookupForm').classList.remove('hidden');$('challengeForm').classList.add('hidden');$('challengeQuestions').innerHTML='';$('familyResult').className='result';$('ticketResult').className='result';$('requestForm').reset();if(typeof selectedRequestFiles!=='undefined'){selectedRequestFiles=[];renderRequestFiles();$('messageCount').textContent='0 / 2500 حرف';$('requestedChanges').required=false}$('requestType').dispatchEvent(new Event('change'));hideMsg('lookupMsg');hideMsg('submitMsg');
+ $('familyId').value='';$('lookupForm').reset();$('lookupForm').classList.remove('hidden');$('challengeForm').classList.add('hidden');$('challengeQuestions').innerHTML='';$('familyResult').className='result';$('ticketResult').className='result';$('requestForm').reset();delete $('requestForm').dataset.correctionPrepared;if(typeof selectedRequestFiles!=='undefined'){selectedRequestFiles=[];renderRequestFiles();$('messageCount').textContent='0 / 2500 حرف';$('requestedChanges').required=false}$('requestType').dispatchEvent(new Event('change'));hideMsg('lookupMsg');hideMsg('submitMsg');
  toast('تم تسجيل الخروج بنجاح','ok');window.scrollTo({top:0,behavior:'auto'});
 }
 $('logoutBtn').addEventListener('click',logoutPortal);
@@ -779,7 +856,7 @@ $('message').addEventListener('input',()=>$('messageCount').textContent=`${$('me
 function fileAsRequestPayload(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||'');resolve({name:file.name,type:file.type,size:file.size,data:value.split(',')[1]||''})};reader.onerror=()=>reject(new Error(`تعذرت قراءة الملف: ${file.name}`));reader.readAsDataURL(file)})}
 
 let requestSubmissionInProgress=false;
-$('requestForm').addEventListener('submit',async e=>{e.preventDefault();if(requestSubmissionInProgress)return;if(!verifiedFamily){msg('submitMsg','تحقق من بيانات الأسرة أولاً من تبويب «بياناتي».');return} if(!navigator.onLine){msg('submitMsg','لا يوجد اتصال بالإنترنت. احتفظ بالبيانات المكتوبة وأعد الإرسال بعد عودة الاتصال.');return} requestSubmissionInProgress=true;$('submitBtn').disabled=true;$('submitBtn').classList.add('is-loading');$('submitBtn').setAttribute('aria-busy','true');hideMsg('submitMsg');$('ticketResult').className='result';try{const attachments=await Promise.all(selectedRequestFiles.map(fileAsRequestPayload));if(!navigator.onLine)throw new Error('انقطع الاتصال قبل إرسال الطلب. بيانات النموذج ما زالت محفوظة.');const b=await api('/support/submit',{sessionToken:supportSessionToken,requestType:$('requestType').value,subject:$('subject').value.trim(),message:$('message').value.trim(),requestedChanges:$('requestedChanges').value.trim(),attachments});msg('submitMsg',b.message,'ok');toast('تم إرسال الطلب بنجاح','ok');$('ticketResult').className='result show';$('ticketResult').innerHTML=`<div class="status-panel status-panel-follow"><div class="status-head"><b>تم استلام طلبك بنجاح</b>${statusMarkup(b.status||'قيد المتابعة')}</div><div>رقم الطلب: <strong class="ticket">${esc(b.ticketNo)}</strong></div><p class="sub">ستصلك ردود إدارة المخيم وأي تحديث على طلبك من خلال قسم الإشعارات.</p><button type="button" class="btn secondary" id="copyTicket">نسخ رقم الطلب</button></div>`;$('copyTicket').onclick=async()=>{try{if(!navigator.clipboard?.writeText)throw Error('unsupported');await navigator.clipboard.writeText(String(b.ticketNo));toast('تم نسخ رقم الطلب','ok')}catch(e){toast('تعذر النسخ تلقائياً؛ يمكنك تحديد رقم الطلب ونسخه','err')}};addPortalNotice('تم استلام طلبك',`رقم الطلب: ${b.ticketNo} — الحالة: ${b.status||'قيد المتابعة'}`);selectedRequestFiles=[];renderRequestFiles();$('requestForm').reset();$('messageCount').textContent='0 / 2500 حرف';$('requestType').dispatchEvent(new Event('change'));try{await refreshFamilyNotifications()}catch(refreshError){toast('تم إرسال الطلب، لكن تعذر تحديث الإشعارات حالياً','err')}}catch(err){msg('submitMsg',err.message)}finally{requestSubmissionInProgress=false;$('submitBtn').disabled=false;$('submitBtn').classList.remove('is-loading');$('submitBtn').removeAttribute('aria-busy')}});
+$('requestForm').addEventListener('submit',async e=>{e.preventDefault();if(requestSubmissionInProgress)return;if(!verifiedFamily){msg('submitMsg','تحقق من بيانات الأسرة أولاً من تبويب «بياناتي».');return} if(!navigator.onLine){msg('submitMsg','لا يوجد اتصال بالإنترنت. احتفظ بالبيانات المكتوبة وأعد الإرسال بعد عودة الاتصال.');return} requestSubmissionInProgress=true;$('submitBtn').disabled=true;$('submitBtn').classList.add('is-loading');$('submitBtn').setAttribute('aria-busy','true');hideMsg('submitMsg');$('ticketResult').className='result';try{const attachments=await Promise.all(selectedRequestFiles.map(fileAsRequestPayload));if(!navigator.onLine)throw new Error('انقطع الاتصال قبل إرسال الطلب. بيانات النموذج ما زالت محفوظة.');const b=await api('/support/submit',{sessionToken:supportSessionToken,requestType:$('requestType').value,subject:$('subject').value.trim(),message:$('message').value.trim(),requestedChanges:$('requestedChanges').value.trim(),attachments});msg('submitMsg',b.message,'ok');toast('تم إرسال الطلب بنجاح','ok');$('ticketResult').className='result show';$('ticketResult').innerHTML=`<div class="status-panel status-panel-follow"><div class="status-head"><b>تم استلام طلبك بنجاح</b>${statusMarkup(b.status||'قيد المتابعة')}</div><div>رقم الطلب: <strong class="ticket">${esc(b.ticketNo)}</strong></div><p class="sub">ستصلك ردود إدارة المخيم وأي تحديث على طلبك من خلال قسم الإشعارات.</p><button type="button" class="btn secondary" id="copyTicket">نسخ رقم الطلب</button></div>`;$('copyTicket').onclick=async()=>{try{if(!navigator.clipboard?.writeText)throw Error('unsupported');await navigator.clipboard.writeText(String(b.ticketNo));toast('تم نسخ رقم الطلب','ok')}catch(e){toast('تعذر النسخ تلقائياً؛ يمكنك تحديد رقم الطلب ونسخه','err')}};addPortalNotice('تم استلام طلبك',`رقم الطلب: ${b.ticketNo} — الحالة: ${b.status||'قيد المتابعة'}`);selectedRequestFiles=[];renderRequestFiles();$('requestForm').reset();delete $('requestForm').dataset.correctionPrepared;$('messageCount').textContent='0 / 2500 حرف';$('requestType').dispatchEvent(new Event('change'));try{await refreshFamilyNotifications()}catch(refreshError){toast('تم إرسال الطلب، لكن تعذر تحديث الإشعارات حالياً','err')}}catch(err){msg('submitMsg',err.message)}finally{requestSubmissionInProgress=false;$('submitBtn').disabled=false;$('submitBtn').classList.remove('is-loading');$('submitBtn').removeAttribute('aria-busy')}});
 
 
 // Display controls are session-only; no storage of personal information.
