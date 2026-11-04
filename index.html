@@ -273,6 +273,61 @@ html.session-checking #sessionBoot{display:flex}
 .footer-credit-block .footer-rights{color:#82909c;font-size:10px;line-height:1.6;margin-top:1px}
 .gate-foot.footer-credit-block{margin-top:15px}
 </style>
+<style>
+
+/* Stage 2: responsive visual refinement; presentation-only, no API or data changes. */
+:root{color-scheme:light;--focus-ring:#d4a34a}
+html{scroll-padding-top:18px}body{overflow-x:hidden;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font-family:inherit}button{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px}
+button:disabled{cursor:not-allowed;filter:saturate(.75)}
+.hero-inner,.wrap{width:100%}.wrap{padding-inline:clamp(12px,3vw,22px)}
+.card,.gate-card,.home-dashboard,.status-panel,.member-card{overflow-wrap:anywhere}
+.card{transition:border-color .2s ease,box-shadow .2s ease}
+.card h3{line-height:1.55}.sub{line-height:1.9}
+.field{min-width:0}.field label{line-height:1.7}.field input,.field select,.field textarea{max-width:100%;transition:border-color .18s ease,box-shadow .18s ease;background-color:#fff}
+.field input:hover,.field select:hover,.field textarea:hover{border-color:#91b6c6}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid transparent;border-color:#176b87;box-shadow:0 0 0 3px #176b8724}
+.actions{align-items:stretch}.actions>.btn{max-width:100%;white-space:normal;line-height:1.6}
+.nav button{display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere}
+.nav button:focus-visible,.home-shortcut:focus-visible{outline:3px solid var(--focus-ring);outline-offset:3px}
+.message,.notice,.request-detail{overflow-wrap:anywhere}
+.kv,.member-details,.dashboard-grid,.home-stats,.home-shortcuts{min-width:0}
+.kv>div,.member-details>div,.home-stat,.dashboard-stat{min-width:0}
+.request-card,.announcement-item{overflow-wrap:anywhere}
+.announcement-item h4{line-height:1.6}.announcement-item p{line-height:2}
+.home-shortcut,.quick-action{min-width:0}.home-shortcut>span:nth-child(2){overflow-wrap:anywhere}
+.footer-credit-block{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:700px){
+ .hero-copy{margin-top:18px}.hero-copy p{line-height:1.85}
+ .card{margin-bottom:12px}.actions>.btn{flex:1 1 145px}
+ .profile-summary{align-items:flex-start}
+ .home-dashboard-head{align-items:flex-start}
+ .home-dashboard-head>div:first-child{min-width:0}
+}
+@media(max-width:480px){
+ .wrap{padding-inline:12px}.hero{padding-inline:14px}
+ .brand h1{font-size:17px}.brand p{font-size:11px}
+ .nav{gap:6px}.nav button{font-size:10px;min-height:58px;padding:8px 3px;line-height:1.6}
+ .card{padding:15px;border-radius:17px}.card h3{font-size:16px}
+ .home-dashboard{padding:13px;border-radius:17px}.home-dashboard-head h3{font-size:16px}
+ .home-shortcuts{gap:7px}.home-shortcut{min-height:76px;padding:10px 7px;border-radius:13px}
+ .home-shortcut small{line-height:1.5}
+ .digital-family-card{padding:15px;border-radius:16px}
+ .gate-card{padding:19px 16px}.gate-brand h1{font-size:16px}
+ .whatsapp-dialog{padding:18px 14px}.whatsapp-phone-row{grid-template-columns:100px minmax(0,1fr)}
+ .request-actions .btn{flex:1 1 120px}
+ .ticket{font-size:clamp(19px,6vw,30px);letter-spacing:1px}
+}
+@media(max-width:350px){
+ .nav button{font-size:9px;padding:6px 2px}
+ .home-shortcuts{grid-template-columns:1fr}
+ .home-stat strong{font-size:18px}
+ .whatsapp-phone-row{grid-template-columns:90px minmax(0,1fr)}
+}
+@media(hover:none){.home-shortcut:hover,.quick-action:hover,.home-latest button:hover,.nav button:not(.active):hover{transform:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}.card,.field input,.field select,.field textarea{transition:none!important}}
+</style>
 </head>
 <body>
 <div id="sessionBoot" role="status" aria-live="polite"><div class="session-boot-card"><div class="session-boot-mark" aria-hidden="true">⌂</div><strong id="sessionBootTitle">جارٍ التحقق من جلسة الدخول</strong><p id="sessionBootText">يرجى الانتظار لحظات حتى نجهّز بوابتك.</p><div id="sessionBootSpinner" class="session-boot-spinner" aria-hidden="true"></div><button id="sessionBootRetry" type="button">إعادة المحاولة</button></div></div>
