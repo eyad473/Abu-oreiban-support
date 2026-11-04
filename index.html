@@ -221,6 +221,14 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 /* One-time family WhatsApp contact capture */
 .whatsapp-overlay{position:fixed;inset:0;z-index:10050;display:none;align-items:center;justify-content:center;padding:18px;background:#0b223dcc;backdrop-filter:blur(6px)}
 .whatsapp-overlay.open{display:flex}.whatsapp-dialog{width:min(100%,440px);padding:23px;background:#fff;border:1px solid #dce8ed;border-radius:22px;box-shadow:0 25px 70px #061a2c44}.whatsapp-dialog h2{margin:0 0 8px;color:#102b46;font-size:20px}.whatsapp-dialog p{margin:0 0 16px;color:#66788a;font-size:12px;line-height:1.9}.whatsapp-phone-row{display:grid;grid-template-columns:112px 1fr;gap:8px}.whatsapp-phone-row select,.whatsapp-phone-row input{width:100%;min-height:48px;border:1px solid #ccd9e5;border-radius:11px;padding:9px;background:#fff;font:inherit;direction:ltr}.whatsapp-dialog .btn{width:100%;margin-top:13px}.family-whatsapp{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:12px 0;padding:12px;border:1px solid #cfe8dc;border-radius:13px;background:#f2fbf6}.family-whatsapp b{direction:ltr;unicode-bidi:plaintext}.family-whatsapp a{display:inline-flex;align-items:center;padding:8px 12px;border-radius:10px;background:#16805e;color:#fff;text-decoration:none;font-size:12px;font-weight:800}
+/* Development phase 2: request tracking controls */
+.request-tracking-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 10px}
+.request-tracking-tools label{font-size:12px;font-weight:700;display:grid;gap:5px}
+.request-tracking-tools select{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}
+.request-tracking-summary{font-size:12px;color:var(--muted);margin:8px 0 12px;line-height:1.7}
+.request-card .request-card-head b{overflow-wrap:anywhere}
+.request-card .request-actions button[aria-expanded="true"]{background:var(--navy);color:white}
+@media(max-width:410px){.request-tracking-tools{grid-template-columns:1fr}}
 </style><script>document.documentElement.classList.add('session-checking');</script>
 <style>
 html.session-checking #portalGate{display:none!important}
@@ -395,7 +403,7 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
 </div><div class="actions"><button class="btn" id="submitBtn">إرسال الطلب</button></div></form>
 <div id="submitMsg" class="message"></div><div id="ticketResult" class="result"></div>
 </section>
-<section id="tab-notifications" class="card hidden"><div class="section-heading"><div><h3>إشعارات طلباتك</h3><p class="sub" style="margin:3px 0 0">تظهر هنا ردود إدارة المخيم وأي تحديث على طلباتك.</p></div><button type="button" class="btn secondary" id="refreshNotifications">تحديث</button></div><div class="notification-filters" role="group" aria-label="تصفية الإشعارات"><button type="button" data-notice-filter="all" aria-pressed="true">الكل</button><button type="button" data-notice-filter="requests" aria-pressed="false">الطلبات</button><button type="button" data-notice-filter="notices" aria-pressed="false">التنبيهات</button></div><label for="notificationSearch" class="field" style="font-size:12px;font-weight:700">بحث في الطلبات والإشعارات</label><input id="notificationSearch" class="notification-search" type="search" placeholder="ابحث برقم الطلب أو العنوان أو الحالة" autocomplete="off"><div id="notificationList" class="notice-list"><div class="notification-empty">لا توجد إشعارات بعد. ستظهر هنا ردود الإدارة والتحديثات عند توفرها.</div></div></section>
+<section id="tab-notifications" class="card hidden"><div class="section-heading"><div><h3>إشعارات طلباتك</h3><p class="sub" style="margin:3px 0 0">تظهر هنا ردود إدارة المخيم وأي تحديث على طلباتك.</p></div><button type="button" class="btn secondary" id="refreshNotifications">تحديث</button></div><div class="notification-filters" role="group" aria-label="تصفية الإشعارات"><button type="button" data-notice-filter="all" aria-pressed="true">الكل</button><button type="button" data-notice-filter="requests" aria-pressed="false">الطلبات</button><button type="button" data-notice-filter="notices" aria-pressed="false">التنبيهات</button></div><label for="notificationSearch" class="field" style="font-size:12px;font-weight:700">بحث في الطلبات والإشعارات</label><input id="notificationSearch" class="notification-search" type="search" placeholder="ابحث برقم الطلب أو العنوان أو الحالة" autocomplete="off"><div class="request-tracking-tools" id="requestTrackingTools"><label for="requestStatusFilter">حالة الطلب<select id="requestStatusFilter"><option value="all">جميع الحالات</option><option value="pending">قيد المتابعة</option><option value="completed">مكتمل أو مغلق</option></select></label><label for="requestSort">ترتيب الطلبات<select id="requestSort"><option value="updated">الأحدث تحديثاً</option><option value="created">الأحدث إرسالاً</option><option value="oldest">الأقدم إرسالاً</option></select></label></div><p id="requestTrackingSummary" class="request-tracking-summary" role="status" aria-live="polite"></p><div id="notificationList" class="notice-list"><div class="notification-empty">لا توجد إشعارات بعد. ستظهر هنا ردود الإدارة والتحديثات عند توفرها.</div></div></section>
 <div class="footer footer-credit-block"><span class="footer-credit-label">Developed &amp; Designed by</span><strong class="footer-credit-name">Abu Omar Albaik</strong><span class="footer-rights">© 2026 All Rights Reserved</span></div>
 </main>
 <script>
@@ -472,9 +480,18 @@ function renderNotifications(){
  const n=portalNotices.filter(x=>!readNotifications.has(x.id)).length+familyRequests.filter(x=>isRequestNotice(x)&&!readNotifications.has(requestNoticeKey(x))).length;
  [bell,nav].forEach(el=>{if(!el)return;el.textContent=n;el.classList.toggle('hidden',!n)});
  const notices=portalNotices.map(x=>`<article class="notice-item"><span class="notice-dot"></span><div><b>${esc(x.title)}</b><p>${esc(x.body)}</p><small>${esc(x.when||'')}</small></div></article>`).join('');
- const requests=familyRequests.map(x=>{
+ const expandedTickets=new Set([...list.querySelectorAll('.request-card .request-actions button[aria-expanded="true"]')].map(b=>b.dataset.openTicket));
+ const sortedRequests=[...familyRequests].sort((a,b)=>{
+  const mode=$('requestSort')?.value||'updated';
+  const field=mode==='updated'?'updatedAt':'createdAt';
+  const aTime=Number(a[field]||a.createdAt||0),bTime=Number(b[field]||b.createdAt||0);
+  return mode==='oldest'?aTime-bTime:bTime-aTime;
+ });
+ const requests=sortedRequests.map(x=>{
    const st=statusInfo(x.status);
-   return `<article class="request-card"><div class="request-card-head"><b>${esc(x.subject||x.requestType||'طلب')}</b>${statusMarkup(x.status)}</div><p><b>رقم الطلب:</b> ${esc(x.ticketNo)} · <b>النوع:</b> ${esc(x.requestType)}<br><small>تاريخ الإرسال: ${esc(new Date(Number(x.createdAt||Date.now())).toLocaleString('ar'))}</small></p><div class="request-actions"><button type="button" class="btn secondary" data-open-ticket="${esc(x.ticketNo)}">عرض التفاصيل</button></div><div class="request-detail hidden"><b>تفاصيل الطلب</b><div>${esc(x.message||'لا توجد تفاصيل مسجلة')}</div>${x.requestedChanges?`<b>البيانات المطلوب تحديثها</b><div>${esc(x.requestedChanges)}</div>`:''}<b>حالة الطلب</b><div>${esc(st.label)}</div><b>رد إدارة المخيم</b><div>${esc(String(x.staffReply||'لم يصدر رد من الإدارة حتى الآن.'))}</div><small>آخر تحديث: ${esc(new Date(Number(x.updatedAt||x.createdAt||Date.now())).toLocaleString('ar'))}</small></div></article>`;
+   const ticket=String(x.ticketNo||'');const expanded=expandedTickets.has(ticket);
+   const completed=isCompletedRequest(x.status);
+   return `<article class="request-card" data-request-state="${completed?'completed':'pending'}"><div class="request-card-head"><b>${esc(x.subject||x.requestType||'طلب')}</b>${statusMarkup(x.status)}</div><p><b>رقم الطلب:</b> ${esc(x.ticketNo)} · <b>النوع:</b> ${esc(x.requestType)}<br><small>تاريخ الإرسال: ${esc(new Date(Number(x.createdAt||Date.now())).toLocaleString('ar'))}</small></p><div class="request-actions"><button type="button" class="btn secondary" data-open-ticket="${esc(x.ticketNo)}" aria-expanded="${expanded}" aria-label="${expanded?'إخفاء':'عرض'} تفاصيل الطلب ${esc(ticket)}">${expanded?'إخفاء التفاصيل':'عرض التفاصيل'}</button></div><div class="request-detail ${expanded?'':'hidden'}"><b>تفاصيل الطلب</b><div>${esc(x.message||'لا توجد تفاصيل مسجلة')}</div>${x.requestedChanges?`<b>البيانات المطلوب تحديثها</b><div>${esc(x.requestedChanges)}</div>`:''}<b>حالة الطلب</b><div>${esc(st.label)}</div><b>رد إدارة المخيم</b><div>${esc(String(x.staffReply||'لم يصدر رد من الإدارة حتى الآن.'))}</div><small>آخر تحديث: ${esc(new Date(Number(x.updatedAt||x.createdAt||Date.now())).toLocaleString('ar'))}</small></div></article>`;
  }).join('');
  list.innerHTML=(notices+requests)||'<div class="notification-empty">لا توجد طلبات أو إشعارات حتى الآن. ستظهر هنا طلباتك وردود الإدارة.</div>';
  applyNotificationFilters();
@@ -483,6 +500,10 @@ function renderNotifications(){
  const latest=$('homeLatestText');if(latest){const updated=[...familyRequests].sort((a,b)=>Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0))[0];latest.textContent=updated?(String(updated.staffReply||'').trim()?'ورد رد من الإدارة على طلبك رقم '+(updated.ticketNo||''):'حالة طلبك رقم '+(updated.ticketNo||'')+': '+statusInfo(updated.status).label):'لا توجد تحديثات جديدة على طلباتك حالياً.';}
 }
 // Stage 6: client-side filters only; no additional server calls or data changes.
+function isCompletedRequest(status){return /تم\s*الحل|محلول|مكتمل|منجز|مرفوض|رفض|مغلق|ملغي/.test(String(status||''))}
+let activeRequestStatusFilter='all';
+$('requestStatusFilter').addEventListener('change',e=>{activeRequestStatusFilter=e.target.value;applyNotificationFilters()});
+$('requestSort').addEventListener('change',renderNotifications);
 let activeNotificationFilter='all';
 function applyNotificationFilters(){
  const list=$('notificationList');if(!list)return;
@@ -490,12 +511,14 @@ function applyNotificationFilters(){
  let visible=0;
  list.querySelectorAll('.notice-item,.request-card').forEach(card=>{
   const kind=card.classList.contains('request-card')?'requests':'notices';
-  const show=(activeNotificationFilter==='all'||activeNotificationFilter===kind)&&(!term||card.textContent.toLocaleLowerCase('ar').includes(term));
+  const statusMatch=kind!=='requests'||activeRequestStatusFilter==='all'||card.dataset.requestState===activeRequestStatusFilter;
+  const show=(activeNotificationFilter==='all'||activeNotificationFilter===kind)&&statusMatch&&(!term||card.textContent.toLocaleLowerCase('ar').includes(term));
   card.classList.toggle('hidden',!show);if(show)visible++;
  });
  let empty=$('notificationFilteredEmpty');
  if(!empty){empty=document.createElement('div');empty.id='notificationFilteredEmpty';empty.className='notification-empty hidden';empty.textContent='لا توجد نتائج مطابقة للبحث أو التصفية.';list.appendChild(empty)}
  empty.classList.toggle('hidden',visible>0||!!list.querySelector('.notification-empty:not(#notificationFilteredEmpty)'));
+ const summary=$('requestTrackingSummary');if(summary){const total=familyRequests.length;const pending=familyRequests.filter(x=>!isCompletedRequest(x.status)).length;const shown=[...list.querySelectorAll('.request-card')].filter(x=>!x.classList.contains('hidden')).length;summary.textContent=`الطلبات: ${total} | قيد المتابعة: ${pending} | الظاهرة حالياً: ${shown}`;}
 }
 document.querySelectorAll('[data-notice-filter]').forEach(btn=>btn.addEventListener('click',()=>{
  activeNotificationFilter=btn.dataset.noticeFilter;
@@ -503,7 +526,7 @@ document.querySelectorAll('[data-notice-filter]').forEach(btn=>btn.addEventListe
  applyNotificationFilters();
 }));
 $('notificationSearch').addEventListener('input',applyNotificationFilters);
-$('notificationList').addEventListener('click',e=>{const btn=e.target.closest('[data-open-ticket]');if(!btn)return;const detail=btn.closest('.request-card')?.querySelector('.request-detail');if(!detail)return;const opening=detail.classList.contains('hidden');detail.classList.toggle('hidden',!opening);btn.textContent=opening?'إخفاء التفاصيل':'عرض التفاصيل'});
+$('notificationList').addEventListener('click',e=>{const btn=e.target.closest('[data-open-ticket]');if(!btn)return;const detail=btn.closest('.request-card')?.querySelector('.request-detail');if(!detail)return;const opening=detail.classList.contains('hidden');detail.classList.toggle('hidden',!opening);btn.textContent=opening?'إخفاء التفاصيل':'عرض التفاصيل';btn.setAttribute('aria-expanded',String(opening));btn.setAttribute('aria-label',(opening?'إخفاء':'عرض')+' تفاصيل الطلب '+btn.dataset.openTicket)});
 function addPortalNotice(title,body,when='الآن'){portalNotices.unshift({id:'local:'+Date.now()+':'+portalNotices.length,title,body,when});renderNotifications()}
 async function openNotifications(){tab('notifications');await refreshFamilyNotifications();markVisibleNotificationsRead();$('tab-notifications').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
 $('openNotifications').addEventListener('click',openNotifications);$('refreshNotifications').addEventListener('click',refreshFamilyNotifications);
