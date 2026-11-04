@@ -327,6 +327,12 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
 }
 @media(hover:none){.home-shortcut:hover,.quick-action:hover,.home-latest button:hover,.nav button:not(.active):hover{transform:none}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}.card,.field input,.field select,.field textarea{transition:none!important}}
+/* Stage 6: request and notification usability */
+.notification-filters{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.notification-filters button{font:inherit;font-size:11px;font-weight:800;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer}
+.notification-filters button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.notification-search{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink);margin-bottom:10px}
+.notification-search:focus-visible{outline:3px solid #d8efff;outline-offset:1px}
 </style>
 </head>
 <body>
@@ -389,7 +395,7 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
 </div><div class="actions"><button class="btn" id="submitBtn">إرسال الطلب</button></div></form>
 <div id="submitMsg" class="message"></div><div id="ticketResult" class="result"></div>
 </section>
-<section id="tab-notifications" class="card hidden"><div class="section-heading"><div><h3>إشعارات طلباتك</h3><p class="sub" style="margin:3px 0 0">تظهر هنا ردود إدارة المخيم وأي تحديث على طلباتك.</p></div><button type="button" class="btn secondary" id="refreshNotifications">تحديث</button></div><div id="notificationList" class="notice-list"><div class="notification-empty">لا توجد إشعارات بعد. ستظهر هنا ردود الإدارة والتحديثات عند توفرها.</div></div></section>
+<section id="tab-notifications" class="card hidden"><div class="section-heading"><div><h3>إشعارات طلباتك</h3><p class="sub" style="margin:3px 0 0">تظهر هنا ردود إدارة المخيم وأي تحديث على طلباتك.</p></div><button type="button" class="btn secondary" id="refreshNotifications">تحديث</button></div><div class="notification-filters" role="group" aria-label="تصفية الإشعارات"><button type="button" data-notice-filter="all" aria-pressed="true">الكل</button><button type="button" data-notice-filter="requests" aria-pressed="false">الطلبات</button><button type="button" data-notice-filter="notices" aria-pressed="false">التنبيهات</button></div><label for="notificationSearch" class="field" style="font-size:12px;font-weight:700">بحث في الطلبات والإشعارات</label><input id="notificationSearch" class="notification-search" type="search" placeholder="ابحث برقم الطلب أو العنوان أو الحالة" autocomplete="off"><div id="notificationList" class="notice-list"><div class="notification-empty">لا توجد إشعارات بعد. ستظهر هنا ردود الإدارة والتحديثات عند توفرها.</div></div></section>
 <div class="footer footer-credit-block"><span class="footer-credit-label">Developed &amp; Designed by</span><strong class="footer-credit-name">Abu Omar Albaik</strong><span class="footer-rights">© 2026 All Rights Reserved</span></div>
 </main>
 <script>
@@ -471,10 +477,32 @@ function renderNotifications(){
    return `<article class="request-card"><div class="request-card-head"><b>${esc(x.subject||x.requestType||'طلب')}</b>${statusMarkup(x.status)}</div><p><b>رقم الطلب:</b> ${esc(x.ticketNo)} · <b>النوع:</b> ${esc(x.requestType)}<br><small>تاريخ الإرسال: ${esc(new Date(Number(x.createdAt||Date.now())).toLocaleString('ar'))}</small></p><div class="request-actions"><button type="button" class="btn secondary" data-open-ticket="${esc(x.ticketNo)}">عرض التفاصيل</button></div><div class="request-detail hidden"><b>تفاصيل الطلب</b><div>${esc(x.message||'لا توجد تفاصيل مسجلة')}</div>${x.requestedChanges?`<b>البيانات المطلوب تحديثها</b><div>${esc(x.requestedChanges)}</div>`:''}<b>حالة الطلب</b><div>${esc(st.label)}</div><b>رد إدارة المخيم</b><div>${esc(String(x.staffReply||'لم يصدر رد من الإدارة حتى الآن.'))}</div><small>آخر تحديث: ${esc(new Date(Number(x.updatedAt||x.createdAt||Date.now())).toLocaleString('ar'))}</small></div></article>`;
  }).join('');
  list.innerHTML=(notices+requests)||'<div class="notification-empty">لا توجد طلبات أو إشعارات حتى الآن. ستظهر هنا طلباتك وردود الإدارة.</div>';
+ applyNotificationFilters();
  const requestCount=$('homeRequestCount');if(requestCount)requestCount.textContent=String(familyRequests.length);
  const requestStatus=$('homeRequestStatus');if(requestStatus){const pending=familyRequests.filter(x=>!/تم\s*الحل|محلول|مكتمل|منجز|مرفوض|رفض/.test(String(x.status||''))).length;requestStatus.textContent=familyRequests.length?(pending?pending+' قيد المتابعة':'لا توجد طلبات قيد المتابعة'):'لا توجد طلبات مسجلة';}
  const latest=$('homeLatestText');if(latest){const updated=[...familyRequests].sort((a,b)=>Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0))[0];latest.textContent=updated?(String(updated.staffReply||'').trim()?'ورد رد من الإدارة على طلبك رقم '+(updated.ticketNo||''):'حالة طلبك رقم '+(updated.ticketNo||'')+': '+statusInfo(updated.status).label):'لا توجد تحديثات جديدة على طلباتك حالياً.';}
 }
+// Stage 6: client-side filters only; no additional server calls or data changes.
+let activeNotificationFilter='all';
+function applyNotificationFilters(){
+ const list=$('notificationList');if(!list)return;
+ const term=String($('notificationSearch')?.value||'').trim().toLocaleLowerCase('ar');
+ let visible=0;
+ list.querySelectorAll('.notice-item,.request-card').forEach(card=>{
+  const kind=card.classList.contains('request-card')?'requests':'notices';
+  const show=(activeNotificationFilter==='all'||activeNotificationFilter===kind)&&(!term||card.textContent.toLocaleLowerCase('ar').includes(term));
+  card.classList.toggle('hidden',!show);if(show)visible++;
+ });
+ let empty=$('notificationFilteredEmpty');
+ if(!empty){empty=document.createElement('div');empty.id='notificationFilteredEmpty';empty.className='notification-empty hidden';empty.textContent='لا توجد نتائج مطابقة للبحث أو التصفية.';list.appendChild(empty)}
+ empty.classList.toggle('hidden',visible>0||!!list.querySelector('.notification-empty:not(#notificationFilteredEmpty)'));
+}
+document.querySelectorAll('[data-notice-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+ activeNotificationFilter=btn.dataset.noticeFilter;
+ document.querySelectorAll('[data-notice-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
+ applyNotificationFilters();
+}));
+$('notificationSearch').addEventListener('input',applyNotificationFilters);
 $('notificationList').addEventListener('click',e=>{const btn=e.target.closest('[data-open-ticket]');if(!btn)return;const detail=btn.closest('.request-card')?.querySelector('.request-detail');if(!detail)return;const opening=detail.classList.contains('hidden');detail.classList.toggle('hidden',!opening);btn.textContent=opening?'إخفاء التفاصيل':'عرض التفاصيل'});
 function addPortalNotice(title,body,when='الآن'){portalNotices.unshift({id:'local:'+Date.now()+':'+portalNotices.length,title,body,when});renderNotifications()}
 async function openNotifications(){tab('notifications');await refreshFamilyNotifications();markVisibleNotificationsRead();$('tab-notifications').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}
@@ -720,7 +748,7 @@ $('requestFileList').addEventListener('click',e=>{const b=e.target.closest('[dat
 $('message').addEventListener('input',()=>$('messageCount').textContent=`${$('message').value.length} / 2500 حرف`);
 function fileAsRequestPayload(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const value=String(reader.result||'');resolve({name:file.name,type:file.type,size:file.size,data:value.split(',')[1]||''})};reader.onerror=()=>reject(new Error(`تعذرت قراءة الملف: ${file.name}`));reader.readAsDataURL(file)})}
 
-$('requestForm').addEventListener('submit',async e=>{e.preventDefault();if(!verifiedFamily){msg('submitMsg','تحقق من بيانات الأسرة أولاً من تبويب «بياناتي».');return} $('submitBtn').disabled=true;$('submitBtn').classList.add('is-loading');hideMsg('submitMsg');$('ticketResult').className='result';try{const attachments=await Promise.all(selectedRequestFiles.map(fileAsRequestPayload));const b=await api('/support/submit',{sessionToken:supportSessionToken,requestType:$('requestType').value,subject:$('subject').value.trim(),message:$('message').value.trim(),requestedChanges:$('requestedChanges').value.trim(),attachments});msg('submitMsg',b.message,'ok');toast('تم إرسال الطلب بنجاح','ok');$('ticketResult').className='result show';$('ticketResult').innerHTML=`<div class="status-panel status-panel-follow"><div class="status-head"><b>تم استلام طلبك بنجاح</b>${statusMarkup(b.status||'قيد المتابعة')}</div><div>رقم الطلب: <strong class="ticket">${esc(b.ticketNo)}</strong></div><p class="sub">ستصلك ردود إدارة المخيم وأي تحديث على طلبك من خلال قسم الإشعارات.</p><button type="button" class="btn secondary" id="copyTicket">نسخ رقم الطلب</button></div>`;$('copyTicket').onclick=()=>navigator.clipboard?.writeText(b.ticketNo);addPortalNotice('تم استلام طلبك',`رقم الطلب: ${b.ticketNo} — الحالة: ${b.status||'قيد المتابعة'}`);selectedRequestFiles=[];renderRequestFiles();$('requestForm').reset();$('messageCount').textContent='0 / 2500 حرف';$('requestType').dispatchEvent(new Event('change'));await refreshFamilyNotifications()}catch(err){msg('submitMsg',err.message)}finally{$('submitBtn').disabled=false;$('submitBtn').classList.remove('is-loading')}});
+$('requestForm').addEventListener('submit',async e=>{e.preventDefault();if(!verifiedFamily){msg('submitMsg','تحقق من بيانات الأسرة أولاً من تبويب «بياناتي».');return} if(!navigator.onLine){msg('submitMsg','لا يوجد اتصال بالإنترنت. احتفظ بالبيانات المكتوبة وأعد الإرسال بعد عودة الاتصال.');return} $('submitBtn').disabled=true;$('submitBtn').classList.add('is-loading');hideMsg('submitMsg');$('ticketResult').className='result';try{const attachments=await Promise.all(selectedRequestFiles.map(fileAsRequestPayload));const b=await api('/support/submit',{sessionToken:supportSessionToken,requestType:$('requestType').value,subject:$('subject').value.trim(),message:$('message').value.trim(),requestedChanges:$('requestedChanges').value.trim(),attachments});msg('submitMsg',b.message,'ok');toast('تم إرسال الطلب بنجاح','ok');$('ticketResult').className='result show';$('ticketResult').innerHTML=`<div class="status-panel status-panel-follow"><div class="status-head"><b>تم استلام طلبك بنجاح</b>${statusMarkup(b.status||'قيد المتابعة')}</div><div>رقم الطلب: <strong class="ticket">${esc(b.ticketNo)}</strong></div><p class="sub">ستصلك ردود إدارة المخيم وأي تحديث على طلبك من خلال قسم الإشعارات.</p><button type="button" class="btn secondary" id="copyTicket">نسخ رقم الطلب</button></div>`;$('copyTicket').onclick=async()=>{try{if(!navigator.clipboard?.writeText)throw Error('unsupported');await navigator.clipboard.writeText(String(b.ticketNo));toast('تم نسخ رقم الطلب','ok')}catch(e){toast('تعذر النسخ تلقائياً؛ يمكنك تحديد رقم الطلب ونسخه','err')}};addPortalNotice('تم استلام طلبك',`رقم الطلب: ${b.ticketNo} — الحالة: ${b.status||'قيد المتابعة'}`);selectedRequestFiles=[];renderRequestFiles();$('requestForm').reset();$('messageCount').textContent='0 / 2500 حرف';$('requestType').dispatchEvent(new Event('change'));await refreshFamilyNotifications()}catch(err){msg('submitMsg',err.message)}finally{$('submitBtn').disabled=false;$('submitBtn').classList.remove('is-loading')}});
 
 
 // Display controls are session-only; no storage of personal information.
