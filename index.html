@@ -402,15 +402,23 @@ let familyRequests=[];
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function api(path,body){const headers={'Content-Type':'application/json'};if(supportSessionToken)headers['X-Support-Session']=supportSessionToken;const r=await fetch(API+path,{method:'POST',headers,body:JSON.stringify(body||{}),cache:'no-store'});let b={};try{b=await r.json()}catch{}if(!r.ok||!b.ok){const error=Error(b.error||'تعذر الاتصال بالخادم');error.status=r.status;throw error}return b}
+// Stage 3: avoid concurrent announcement requests and unnecessary DOM repaints.
+let announcementsLoading=false;
+let announcementsRenderedMarkup=null;
+const announcementDateLong=new Intl.DateTimeFormat('ar',{year:'numeric',month:'long',day:'numeric'});
+const announcementDateShort=new Intl.DateTimeFormat('ar',{year:'numeric',month:'short',day:'numeric'});
 async function loadOfficialAnnouncements(){
+ if(announcementsLoading||!navigator.onLine)return;
+ announcementsLoading=true;
  const box=$('announcementsContent');if(!box)return;
  try{
   const r=await fetch(API+'/announcements',{method:'GET',headers:{'Accept':'application/json'},cache:'no-store'});
   const b=await r.json();if(!r.ok||!b.ok)throw Error(b.error||'تعذر تحميل الإعلانات');
   const items=Array.isArray(b.items)?b.items:[];
-  if(!items.length){box.innerHTML='<div class="announcement-empty"><b>لا توجد إعلانات منشورة حالياً</b>ستظهر هنا التعميمات والتنويهات الرسمية فور اعتمادها ونشرها من إدارة المخيم.</div>';return;}
-  box.innerHTML='<div class="announcement-list">'+items.map(a=>{const p=a.priority==='عاجل'?'urgent':a.priority==='مهم'?'important':'normal';const d=Number(a.publishedAt||a.createdAt||0);const date=d?new Intl.DateTimeFormat('ar',{year:'numeric',month:'long',day:'numeric'}).format(new Date(d)):'إعلان رسمي';return `<article class="announcement-item priority-${p}"><h4>${esc(a.title)}</h4><p>${esc(a.body)}</p><div class="announcement-meta"><span class="announcement-tag">${esc(a.category||'تعميم')}</span><span>${esc(date)}</span>${a.expiresAt?'<span>· صالح حتى '+esc(new Intl.DateTimeFormat('ar',{year:'numeric',month:'short',day:'numeric'}).format(new Date(Number(a.expiresAt))))+'</span>':''}</div></article>`}).join('')+'</div>';
- }catch(e){box.innerHTML='<div class="announcement-empty"><b>تعذر تحميل الإعلانات حالياً</b>تحقق من الاتصال بالإنترنت، ثم أعد فتح البوابة.</div>';}
+  if(!items.length){const html='<div class="announcement-empty"><b>لا توجد إعلانات منشورة حالياً</b>ستظهر هنا التعميمات والتنويهات الرسمية فور اعتمادها ونشرها من إدارة المخيم.</div>';if(html!==announcementsRenderedMarkup){box.innerHTML=html;announcementsRenderedMarkup=html;}return;}
+  const html='<div class="announcement-list">'+items.map(a=>{const p=a.priority==='عاجل'?'urgent':a.priority==='مهم'?'important':'normal';const d=Number(a.publishedAt||a.createdAt||0);const date=d?announcementDateLong.format(new Date(d)):'إعلان رسمي';return `<article class="announcement-item priority-${p}"><h4>${esc(a.title)}</h4><p>${esc(a.body)}</p><div class="announcement-meta"><span class="announcement-tag">${esc(a.category||'تعميم')}</span><span>${esc(date)}</span>${a.expiresAt?'<span>· صالح حتى '+esc(announcementDateShort.format(new Date(Number(a.expiresAt))))+'</span>':''}</div></article>`}).join('')+'</div>';
+  if(html!==announcementsRenderedMarkup){box.innerHTML=html;announcementsRenderedMarkup=html;}
+ }catch(e){if(announcementsRenderedMarkup===null){box.innerHTML='<div class="announcement-empty"><b>تعذر تحميل الإعلانات حالياً</b>تحقق من الاتصال بالإنترنت، ثم أعد فتح البوابة.</div>';}}finally{announcementsLoading=false;}
 }
 
 function msg(id,text,kind='err'){const e=$(id);e.textContent=text;e.className='message show '+kind}
@@ -543,8 +551,12 @@ function armFamilySyncIdleTimer(){
   window.familyNotificationTimer=null;
  },FAMILY_SYNC_IDLE_AFTER);
 }
+let lastFamilyActivityTimerRefresh=0;
 function noteFamilyUserActivity(){
  if(!supportSessionToken||document.visibilityState!=='visible')return;
+ const now=Date.now();
+ if(familySyncActive&&now-lastFamilyActivityTimerRefresh<1000)return;
+ lastFamilyActivityTimerRefresh=now;
  const wasIdle=!familySyncActive;
  familySyncActive=true;
  armFamilySyncIdleTimer();
@@ -743,7 +755,7 @@ async function restoreSupportSession(){
  }
 }
 $('sessionBootRetry').addEventListener('click',async()=>{$('sessionBootRetry').style.display='none';$('sessionBootSpinner').style.display='block';$('sessionBootTitle').textContent='جارٍ التحقق من جلسة الدخول';$('sessionBootText').textContent='يرجى الانتظار لحظات حتى نجهّز بوابتك.';await restoreSupportSession()});
-loadOfficialAnnouncements();window.addEventListener('online',()=>{loadOfficialAnnouncements();if(document.documentElement.classList.contains('session-checking'))$('sessionBootRetry').click()});window.setInterval(()=>{if(document.visibilityState==='visible')loadOfficialAnnouncements()},60000);
+loadOfficialAnnouncements();window.addEventListener('online',()=>{loadOfficialAnnouncements();if(document.documentElement.classList.contains('session-checking'))$('sessionBootRetry').click()});window.setInterval(()=>{if(document.visibilityState==='visible'&&navigator.onLine)loadOfficialAnnouncements()},60000);
 restoreSupportSession();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script></body></html>
