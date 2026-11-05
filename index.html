@@ -251,6 +251,9 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 .resident-fund-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}.resident-fund-values>div{border:1px solid #e1e8ef;border-radius:12px;background:white;padding:10px 7px;min-width:0}.resident-fund-values small{display:block;font-size:10px}.resident-fund-values strong{display:block;margin-top:5px;color:#17334a;font-size:16px}
 .resident-fund-message{margin:8px 0 0;font-size:12px;line-height:1.9;color:#41596b}.resident-fund-refresh{border:1px solid #cadce8;border-radius:9px;padding:7px 11px;background:white;color:#20547a;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
 @media(max-width:370px){.resident-fund{padding:12px}.resident-fund-values strong{font-size:13px}}
+
+/* AI assistant: isolated, authenticated and mobile friendly */
+.ai-card{border:1px solid #cbdfe5;background:linear-gradient(145deg,#fff,#f3faf9)}.ai-heading{display:flex;gap:11px;align-items:center}.ai-mark{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:14px;background:#dff1ee;color:#146e74;font-size:23px}.ai-heading h3{margin:0}.ai-chat{height:320px;max-height:55vh;overflow:auto;overscroll-behavior:contain;border:1px solid #dce7ec;border-radius:15px;background:#f7fafc;padding:13px;display:flex;flex-direction:column;gap:10px;margin-top:12px}.ai-bubble{max-width:90%;padding:11px 13px;border-radius:15px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.9;font-size:13px}.ai-bubble.bot{align-self:flex-start;background:#fff;border:1px solid #dce7ec;color:#17334a}.ai-bubble.user{align-self:flex-end;background:#176b78;color:#fff}.ai-compose{display:flex;align-items:flex-end;gap:9px;margin-top:11px}.ai-compose textarea{flex:1;min-width:0;min-height:48px;max-height:130px;resize:vertical;border:1px solid #cbdbe4;border-radius:12px;padding:11px;font:inherit;font-size:13px}.ai-compose button{min-width:80px}.ai-privacy{font-size:11px;color:#657b89;line-height:1.8;margin:9px 0 0}.ai-status{font-size:12px;color:#92621a;margin-top:7px;min-height:18px}.ai-status.error{color:#b42318}@media(max-width:480px){.ai-chat{height:290px}.ai-compose{gap:6px}.ai-compose button{min-width:65px;padding:9px}}
 </style><script>document.documentElement.classList.add('session-checking');</script>
 <style>
 html.session-checking #portalGate{display:none!important}
@@ -415,6 +418,14 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
   <button type="button" class="home-shortcut" id="homeDownloadCard"><span class="shortcut-icon"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18"/><path d="M7 14h4M7 17h2.5"/><rect x="15" y="13" width="2.6" height="3.6" rx=".6"/></svg></span><span><b>بطاقتي الرقمية</b><small>تنزيل بطاقة الأسرة</small></span><i><svg class="pi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg></i></button>
  </div>
  <div class="home-latest" id="homeLatestUpdate" aria-live="polite"><span class="home-latest-dot"></span><span><b>آخر المستجدات</b><small id="homeLatestText">ستظهر هنا آخر تحديثات طلباتك بعد تحميلها.</small></span><button type="button" data-go-tab="notifications">عرض</button></div>
+</section>
+
+<section class="card ai-card" id="aiAssistantCard" aria-label="المساعد الذكي لمخيم أبو عريبان">
+ <div class="ai-heading"><span class="ai-mark" aria-hidden="true">✦</span><div><h3>المساعد الذكي للمخيم</h3><p class="sub" style="margin:2px 0 0">إرشادات عامة ومساعدة في استخدام خدمات البوابة</p></div></div>
+ <div class="ai-chat" id="aiChatLog" role="log" aria-live="polite" aria-relevant="additions text"><div class="ai-bubble bot">أهلاً وسهلاً! اسألني عن كيفية استخدام البوابة أو الخدمات العامة. للحصول على رد رسمي أو تقديم شكوى، استخدم قسم «إرسال طلب».</div></div>
+ <form id="aiChatForm" class="ai-compose"><label for="aiChatInput" class="hidden">اكتب سؤالك</label><textarea id="aiChatInput" maxlength="1000" rows="2" placeholder="اكتب سؤالك هنا…" required></textarea><button class="btn" type="submit" id="aiSendBtn">إرسال</button></form>
+ <div id="aiChatStatus" class="ai-status" role="status" aria-live="polite"></div>
+ <p class="ai-privacy">المساعد تجريبي، وقد يخطئ. لا تكتب أرقام الهوية أو المعلومات الطبية أو كلمات المرور. إجاباته ليست قرارات رسمية بشأن المساعدات أو الطلبات.</p>
 </section>
 <section class="card" id="announcementsCard"><div class="section-heading"><div><h3>إعلانات إدارة المخيم</h3><p class="sub" style="margin:3px 0 0">التعميمات والتنويهات المعتمدة من إدارة المخيم</p></div><span class="pill">الإعلانات الرسمية</span></div><button type="button" class="btn secondary" id="refreshAnnouncements" style="margin-bottom:10px">تحديث الإعلانات</button><div id="announcementsContent"><div class="announcement-loading">جارٍ تحميل الإعلانات الرسمية…</div></div></section>
 <section class="card" id="digitalCardSection"><div class="section-heading"><div><h3>بطاقتي الرقمية</h3><p class="sub" style="margin:3px 0 0">بطاقة تعريف الأسرة — احفظها كصورة على هاتفك</p></div><span class="pill">خاصة</span></div>
@@ -945,4 +956,28 @@ $('sessionBootRetry').addEventListener('click',async()=>{$('sessionBootRetry').s
 loadOfficialAnnouncements();window.addEventListener('online',()=>{loadOfficialAnnouncements();if(document.documentElement.classList.contains('session-checking'))$('sessionBootRetry').click()});window.setInterval(()=>{if(document.visibilityState==='visible'&&navigator.onLine)loadOfficialAnnouncements()},60000);
 restoreSupportSession();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+
+// Independent AI chat module: no family data is sent automatically.
+(()=>{
+ const form=document.getElementById('aiChatForm'),input=document.getElementById('aiChatInput'),log=document.getElementById('aiChatLog'),send=document.getElementById('aiSendBtn'),status=document.getElementById('aiChatStatus');
+ if(!form||!input||!log||!send)return;
+ let busy=false;
+ function addBubble(text,kind){const el=document.createElement('div');el.className='ai-bubble '+kind;el.textContent=String(text||'');log.appendChild(el);log.scrollTop=log.scrollHeight;}
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();const question=input.value.trim();if(busy||!question)return;
+  if(!supportSessionToken||!verifiedFamily){status.textContent='يجب التحقق من هوية الأسرة أولاً.';status.className='ai-status error';return;}
+  if(!navigator.onLine){status.textContent='المساعد يحتاج إلى اتصال بالإنترنت.';status.className='ai-status error';return;}
+  busy=true;send.disabled=true;input.disabled=true;status.className='ai-status';status.textContent='جارٍ إعداد الإجابة…';addBubble(question,'user');input.value='';
+  try{
+   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);let response;
+   try{response=await fetch(API+'/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Support-Session':supportSessionToken},body:JSON.stringify({message:question}),cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok||data.ok===false){if(response.status===401||response.status===403)throw Error('انتهت الجلسة أو لا تملك صلاحية استخدام المساعد.');if(response.status===503||response.status===404)throw Error('المساعد غير مفعّل حالياً. يرجى المحاولة لاحقاً.');throw Error('تعذّر الحصول على إجابة حالياً.');}
+   const answer=data.reply??data.answer??data.response??data.message;
+   if(typeof answer!=='string'||!answer.trim())throw Error('لم تصل إجابة صالحة من المساعد.');
+   addBubble(answer,'bot');status.textContent='';
+  }catch(error){const m=error.name==='AbortError'?'انتهت مهلة الانتظار. حاول مجدداً.':error.message;addBubble(m,'bot');status.textContent=m;status.className='ai-status error';}
+  finally{busy=false;send.disabled=false;input.disabled=false;input.focus();}
+ });
+})();
 </script></body></html>
