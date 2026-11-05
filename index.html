@@ -231,6 +231,14 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 @media(max-width:410px){.request-tracking-tools{grid-template-columns:1fr}}
 .home-dashboard-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px 11px;border-radius:12px;background:#eef5f7;border:1px solid #dce9ed;margin:0 0 12px}.home-dashboard-tools span{font-size:11px;color:#52697a;line-height:1.6;flex:1}.home-dashboard-tools button{border:1px solid #bfd5dd;border-radius:9px;background:#fff;color:#174d65;padding:8px 10px;font:inherit;font-size:11px;font-weight:800;cursor:pointer}.home-dashboard-tools button:disabled{opacity:.6;cursor:wait}.home-dashboard-tools button:focus-visible{outline:3px solid #e2bd65;outline-offset:2px}@media(max-width:350px){.home-stats{grid-template-columns:1fr}.home-dashboard-tools button{width:100%}}
 .card-privacy-controls{margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:13px;background:#f6f9fb}.card-private-check{display:flex;align-items:flex-start;gap:10px;font-size:13px;font-weight:700;line-height:1.8;cursor:pointer}.card-private-check input{width:19px;height:19px;flex:none;accent-color:var(--teal);margin-top:3px}.digital-family-card{max-width:650px}.digital-card-meta-grid b{unicode-bidi:plaintext}
+
+/* Camp fund resident status: private, read-only, mobile-first */
+.resident-fund{margin:14px 0;padding:17px;border:1px solid #d7e4ed;border-radius:19px;background:linear-gradient(135deg,#fff,#f4f8fd);box-shadow:0 8px 22px #173b5a0a;direction:rtl}
+.resident-fund-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.resident-fund h3{font-size:16px;margin:0;color:#16334e}.resident-fund small{color:#63778a}.resident-fund-pill{padding:6px 10px;border-radius:99px;background:#eaf0f8;color:#315777;font-size:11px;font-weight:800}
+.resident-fund-pill.paid{background:#e5f5ec;color:#12623d}.resident-fund-pill.partial{background:#fff2dc;color:#87580c}.resident-fund-pill.unpaid{background:#f1f3f6;color:#566577}
+.resident-fund-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}.resident-fund-values>div{border:1px solid #e1e8ef;border-radius:12px;background:white;padding:10px 7px;min-width:0}.resident-fund-values small{display:block;font-size:10px}.resident-fund-values strong{display:block;margin-top:5px;color:#17334a;font-size:16px}
+.resident-fund-message{margin:8px 0 0;font-size:12px;line-height:1.9;color:#41596b}.resident-fund-refresh{border:1px solid #cadce8;border-radius:9px;padding:7px 11px;background:white;color:#20547a;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+@media(max-width:370px){.resident-fund{padding:12px}.resident-fund-values strong{font-size:13px}}
 </style><script>document.documentElement.classList.add('session-checking');</script>
 <style>
 html.session-checking #portalGate{display:none!important}
@@ -377,6 +385,12 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
 <button class="active" data-tab="home">الرئيسية</button><button data-tab="data">بياناتي</button><button data-tab="request">إرسال طلب</button><button data-tab="notifications"><svg class="official-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg> الإشعارات <span id="navBellCount" class="notification-count hidden">0</span></button>
 </nav>
 <section id="tab-home">
+<section class="resident-fund" id="residentFund" aria-label="مساهمة الأسرة الشهرية">
+ <div class="resident-fund-head"><div><small>صندوق مخيم أبو عريبان</small><h3>المساهمة الشهرية — <span id="residentFundMonth">نوفمبر 2026</span></h3></div><span id="residentFundStatus" class="resident-fund-pill">جارٍ التحقق</span></div>
+ <div class="resident-fund-values"><div><small>المطلوب</small><strong id="residentFundRequired">—</strong></div><div><small>المدفوع</small><strong id="residentFundPaid">—</strong></div><div><small>المتبقي</small><strong id="residentFundRemaining">—</strong></div></div>
+ <p class="resident-fund-message" id="residentFundMessage" role="status" aria-live="polite">جارٍ تحميل حالة المساهمة من الإدارة…</p>
+ <button type="button" class="resident-fund-refresh" id="residentFundRefresh">تحديث حالة المساهمة</button>
+</section>
 <section class="home-dashboard" aria-label="ملخص الأسرة والخدمات">
  <div class="home-dashboard-head"><div><small>لوحة متابعة الأسرة</small><h3>خدماتك في مكان واحد</h3><p>وصول سريع إلى بيانات الأسرة وطلباتك وإشعارات الإدارة.</p></div><span class="home-dashboard-mark" aria-hidden="true"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10 12 4l9 6"/><path d="M5 10v8M9.7 10v8M14.3 10v8M19 10v8"/><path d="M3 21h18M4 10h16"/></svg></span></div>
  <div class="home-stats"><article class="home-stat"><span class="home-stat-icon"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.4 2.7-5.6 6-5.6s6 2.2 6 5.6"/><circle cx="17" cy="9" r="2.4"/><path d="M16.6 14.5c2.6.2 4.4 2 4.4 5.2"/></svg></span><div><small>أفراد الأسرة</small><strong id="homeFamilyCount">—</strong><em>حسب السجل المعتمد</em></div></article><article class="home-stat"><span class="home-stat-icon"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9z"/><path d="M8.5 12h7M8.5 16h5"/></svg></span><div><small>طلباتك المسجلة</small><strong id="homeRequestCount">—</strong><em id="homeRequestStatus">تظهر بعد تحميل الطلبات</em></div></article><article class="home-stat" aria-label="الطلبات قيد المتابعة"><span class="home-stat-icon" aria-hidden="true">◷</span><div><small>قيد المتابعة</small><strong id="homePendingCount">—</strong><em>من طلباتك المسجلة</em></div></article><article class="home-stat" aria-label="التنبيهات غير المقروءة"><span class="home-stat-icon" aria-hidden="true">◉</span><div><small>تنبيهات جديدة</small><strong id="homeUnreadCount">—</strong><em>تحديثات تحتاج الاطلاع</em></div></article></div>
@@ -477,7 +491,25 @@ function tab(name){
 document.querySelectorAll('[data-go-tab]').forEach(button=>button.addEventListener('click',async()=>{const target=button.dataset.goTab;tab(target);if(target==='notifications'){await refreshFamilyNotifications();markVisibleNotificationsRead()}$('tab-'+target).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}));
 $('homeDownloadCard').addEventListener('click',downloadDigitalCard);
 
-function unlockPortal(){ $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+// Resident fund status is fetched from the official Worker, never calculated from local family data.
+function residentFundCurrentMonth(){const d=new Date();const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Gaza',year:'numeric',month:'2-digit'}).formatToParts(d);const year=parts.find(x=>x.type==='year')?.value||'2026',month=parts.find(x=>x.type==='month')?.value||'11';return `${year}-${month}`<'2026-11'?'2026-11':`${year}-${month}`}
+async function loadResidentFund(){
+ const badge=$('residentFundStatus'),message=$('residentFundMessage');if(!badge||!supportSessionToken||!verifiedFamily)return;
+ const month=residentFundCurrentMonth();$('residentFundMonth').textContent=new Intl.DateTimeFormat('ar',{timeZone:'Asia/Gaza',month:'long',year:'numeric'}).format(new Date(month+'-15T12:00:00Z'));
+ badge.className='resident-fund-pill';badge.textContent='جارٍ التحديث';message.textContent='جارٍ جلب حالة المساهمة من إدارة المخيم…';
+ try{
+  const r=await fetch(API+'/fund/resident/status?month='+encodeURIComponent(month),{headers:{'X-Support-Session':supportSessionToken},cache:'no-store'});
+  const data=await r.json();if(!r.ok||!data.ok)throw Error(data.error||'تعذر تحديث حالة المساهمة');
+  const money=n=>(Number(n||0)/100).toFixed(2)+' ₪';
+  $('residentFundRequired').textContent=money(data.requiredAgorot);$('residentFundPaid').textContent=money(data.paidAgorot);$('residentFundRemaining').textContent=money(data.remainingAgorot);
+  badge.className='resident-fund-pill '+data.status;
+  if(data.status==='paid'){badge.textContent='تم السداد';message.textContent='شكراً لأسرتكم الكريمة على مساهمتها في دعم صندوق مخيم أبو عريبان.'}
+  else if(data.status==='partial'){badge.textContent='سداد جزئي';message.textContent='تم تسجيل مساهمة جزئية لأسرتكم. يظهر المبلغ المتبقي أعلاه.'}
+  else{badge.textContent='لم يسجل سداد';message.textContent='لم تُسجل مساهمة لهذا الشهر حتى الآن. إذا قمتم بالدفع، يرجى انتظار تأكيد الإدارة.'}
+ }catch(e){badge.textContent='تعذر التحقق';message.textContent='تعذر جلب حالة المساهمة حالياً. يرجى المحاولة لاحقاً.';$('residentFundRequired').textContent='—';$('residentFundPaid').textContent='—';$('residentFundRemaining').textContent='—'}
+}
+$('residentFundRefresh').addEventListener('click',loadResidentFund);
+function unlockPortal(){ loadResidentFund(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
 let toastTimer;
 function toast(text,kind=''){const el=$('portalToast');if(!el)return;el.textContent=text;el.className='show '+kind;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='',2600)}
 function updateConnection(){const el=$('connectionChip');if(!el)return;const online=navigator.onLine;el.textContent=online?'متصل بالإنترنت':'غير متصل';el.classList.toggle('offline',!online);const d=$('dashboardConnection');if(d)d.textContent=online?'متصل':'غير متصل'}
