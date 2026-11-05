@@ -961,7 +961,7 @@ if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serv
 (()=>{
  const form=document.getElementById('aiChatForm'),input=document.getElementById('aiChatInput'),log=document.getElementById('aiChatLog'),send=document.getElementById('aiSendBtn'),status=document.getElementById('aiChatStatus');
  if(!form||!input||!log||!send)return;
- let busy=false;
+ let busy=false;let intakeDraft=null;
  function addBubble(text,kind){const el=document.createElement('div');el.className='ai-bubble '+kind;el.textContent=String(text||'');log.appendChild(el);log.scrollTop=log.scrollHeight;}
  form.addEventListener('submit',async event=>{
   event.preventDefault();const question=input.value.trim();if(busy||!question)return;
@@ -970,7 +970,7 @@ if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serv
   busy=true;send.disabled=true;input.disabled=true;status.className='ai-status';status.textContent='جارٍ إعداد الإجابة…';addBubble(question,'user');input.value='';
   try{
    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);let response;
-   try{response=await fetch(API+'/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Support-Session':supportSessionToken},body:JSON.stringify({message:question}),cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}
+   try{response=await fetch(API+'/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Support-Session':supportSessionToken},body:JSON.stringify({message:question,intakeDraft}),cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}
    const data=await response.json().catch(()=>({}));
    if(!response.ok||data.ok===false){
     const serverReason=[data.error,data.message,data.detail,data.reason].find(v=>typeof v==='string'&&v.trim());
@@ -983,6 +983,7 @@ if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serv
    }
    const answer=data.reply??data.answer??data.response??data.message;
    if(typeof answer!=='string'||!answer.trim())throw Error('لم تصل إجابة صالحة من المساعد.');
+   if(Object.prototype.hasOwnProperty.call(data,'intakeDraft'))intakeDraft=data.intakeDraft;
    addBubble(answer,'bot');if(data.autoSubmitted&&data.ticketNo){status.textContent='تم تسجيل البلاغ برقم '+data.ticketNo;status.className='ai-status';try{await refreshFamilyNotifications()}catch(e){}}else status.textContent='';
   }catch(error){const m=error.name==='AbortError'?'انتهت مهلة الانتظار. حاول مجدداً.':error.message;addBubble(m,'bot');status.textContent=m;status.className='ai-status error';}
   finally{busy=false;send.disabled=false;input.disabled=false;input.focus();}
