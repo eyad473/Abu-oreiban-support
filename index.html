@@ -972,7 +972,15 @@ if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serv
    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);let response;
    try{response=await fetch(API+'/api/ai/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Support-Session':supportSessionToken},body:JSON.stringify({message:question}),cache:'no-store',signal:controller.signal});}finally{clearTimeout(timeout);}
    const data=await response.json().catch(()=>({}));
-   if(!response.ok||data.ok===false){if(response.status===401||response.status===403)throw Error('انتهت الجلسة أو لا تملك صلاحية استخدام المساعد.');if(response.status===503||response.status===404)throw Error('المساعد غير مفعّل حالياً. يرجى المحاولة لاحقاً.');throw Error('تعذّر الحصول على إجابة حالياً.');}
+   if(!response.ok||data.ok===false){
+    const serverReason=[data.error,data.message,data.detail,data.reason].find(v=>typeof v==='string'&&v.trim());
+    const safeReason=serverReason?serverReason.trim().slice(0,240):'';
+    const code='HTTP '+response.status;
+    if(response.status===401||response.status===403)throw Error('تعذّر التحقق من جلسة الأسرة ('+code+').'+(safeReason?' التفاصيل: '+safeReason:''));
+    if(response.status===404)throw Error('مسار المساعد غير موجود على الخادم ('+code+'). تأكد من نشر ملف index.js الذي يتضمن /api/ai/chat.'+(safeReason?' التفاصيل: '+safeReason:''));
+    if(response.status===503)throw Error('خدمة المساعد غير متاحة على الخادم ('+code+').'+(safeReason?' السبب: '+safeReason:' افحص إعدادات Workers AI وسجل أخطاء الخادم.'));
+    throw Error('فشل طلب المساعد ('+code+').'+(safeReason?' السبب: '+safeReason:' يرجى مراجعة سجل الخادم.'));
+   }
    const answer=data.reply??data.answer??data.response??data.message;
    if(typeof answer!=='string'||!answer.trim())throw Error('لم تصل إجابة صالحة من المساعد.');
    addBubble(answer,'bot');status.textContent='';
