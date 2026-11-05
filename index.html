@@ -422,9 +422,9 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
 
 <section class="card ai-card" id="aiAssistantCard" aria-label="المساعد الذكي لمخيم أبو عريبان">
  <div class="ai-heading"><span class="ai-mark" aria-hidden="true">✦</span><div><h3>المساعد الذكي للمخيم</h3><p class="sub" style="margin:2px 0 0">إرشادات عامة ومساعدة في استخدام خدمات البوابة</p></div></div>
- <div class="ai-chat" id="aiChatLog" role="log" aria-live="polite" aria-relevant="additions text"><div class="ai-bubble bot">أهلاً وسهلاً! اسألني عن كيفية استخدام البوابة أو الخدمات العامة. للحصول على رد رسمي أو تقديم شكوى، استخدم قسم «إرسال طلب».</div></div>
+ <div class="ai-chat" id="aiChatLog" role="log" aria-live="polite" aria-relevant="additions text"><div class="ai-bubble bot">أهلاً وسهلاً! اسألني عن كيفية استخدام البوابة أو الخدمات العامة. الشكاوى والطلبات الروتينية الواضحة قد تُسجَّل تلقائياً لدى الإدارة دون تأكيد منفصل، وستحصل على رقم متابعة. للاستفسارات العامة يمكنك التحدث معي.</div></div>
  <form id="aiChatForm" class="ai-compose"><label for="aiChatInput" class="hidden">اكتب سؤالك</label><textarea id="aiChatInput" maxlength="1000" rows="2" placeholder="اكتب سؤالك هنا…" required></textarea><button class="btn" type="submit" id="aiSendBtn">إرسال</button></form>
- <div id="aiChatStatus" class="ai-status" role="status" aria-live="polite"></div>
+ <div class="notice" style="margin-top:8px">تنويه: عند كتابة شكوى أو طلب خدمات روتيني واضح، قد يُسجَّل تلقائياً في صندوق الإدارة دون موافقة إضافية. لا تكتب أرقام الهوية أو تفاصيل صحية حساسة هنا.</div><div id="aiChatStatus" class="ai-status" role="status" aria-live="polite"></div>
  <p class="ai-privacy">المساعد تجريبي، وقد يخطئ. لا تكتب أرقام الهوية أو المعلومات الطبية أو كلمات المرور. إجاباته ليست قرارات رسمية بشأن المساعدات أو الطلبات.</p>
 </section>
 <section class="card" id="announcementsCard"><div class="section-heading"><div><h3>إعلانات إدارة المخيم</h3><p class="sub" style="margin:3px 0 0">التعميمات والتنويهات المعتمدة من إدارة المخيم</p></div><span class="pill">الإعلانات الرسمية</span></div><button type="button" class="btn secondary" id="refreshAnnouncements" style="margin-bottom:10px">تحديث الإعلانات</button><div id="announcementsContent"><div class="announcement-loading">جارٍ تحميل الإعلانات الرسمية…</div></div></section>
@@ -983,7 +983,7 @@ if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serv
    }
    const answer=data.reply??data.answer??data.response??data.message;
    if(typeof answer!=='string'||!answer.trim())throw Error('لم تصل إجابة صالحة من المساعد.');
-   addBubble(answer,'bot');status.textContent='';
+   addBubble(answer,'bot');if(data.autoSubmitted&&data.ticketNo){status.textContent='تم تسجيل البلاغ برقم '+data.ticketNo;status.className='ai-status';try{await refreshFamilyNotifications()}catch(e){}}else status.textContent='';
   }catch(error){const m=error.name==='AbortError'?'انتهت مهلة الانتظار. حاول مجدداً.':error.message;addBubble(m,'bot');status.textContent=m;status.className='ai-status error';}
   finally{busy=false;send.disabled=false;input.disabled=false;input.focus();}
  });
