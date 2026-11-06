@@ -409,7 +409,7 @@ button:disabled{cursor:not-allowed;filter:saturate(.75)}
  <div class="resident-fund-values"><div><small>المطلوب</small><strong id="residentFundRequired">—</strong></div><div><small>المدفوع</small><strong id="residentFundPaid">—</strong></div><div><small>المتبقي</small><strong id="residentFundRemaining">—</strong></div></div>
  <p class="resident-fund-message" id="residentFundMessage" role="status" aria-live="polite">جارٍ تحميل حالة المساهمة من الإدارة…</p>
  <div class="fund-actions"><button type="button" class="resident-fund-refresh" id="residentFundRefresh">تحديث حالة المساهمة</button><button type="button" class="btn" id="fundCheckPayment">تحقّق من تحويل PalPay</button><button type="button" class="btn secondary" id="fundAssistToggle" aria-expanded="false">الدفع عن أسر أخرى</button></div>
- <section class="fund-assist hidden" id="fundAssist" aria-label="الدفع عن أسر أخرى"><h4>المساهمة عن أسر أخرى</h4><p>اكتب بداية اسم رب الأسرة للبحث، مع تجاهل الهمزات والتشكيل والفروق البسيطة في الكتابة. لا تُعرض بيانات الهوية.</p><input id="fundFamilySearch" class="fund-search" autocomplete="off" placeholder="ابحث عن رب الأسرة بالاسم…" aria-label="بحث عن رب الأسرة"><div id="fundFamilyResults" class="fund-results" aria-live="polite"></div><div id="fundFamilyPicked" class="fund-picked"></div><div class="fund-assist-summary"><span>إجمالي المساهمات المختارة</span><strong id="fundAssistTotal">0.00 ₪</strong></div><p id="fundAssistNote" role="status">يتم اختيار الأسر فقط من سجلات الصندوق الرسمية، وليس من أسماء مكتوبة يدويًا.</p><button type="button" class="btn" id="fundAssistVerify" disabled>تحقّق من التحويل لهذه الأسر</button></section>
+ <section class="fund-assist hidden" id="fundAssist" aria-label="الدفع عن أسر أخرى"><h4>المساهمة عن أسر أخرى</h4><p>اكتب ثلاثة أحرف على الأقل من اسم رب الأسرة للبحث، مع تجاهل الهمزات والتشكيل. لا تُعرض بيانات الهوية.</p><input id="fundFamilySearch" class="fund-search" autocomplete="off" placeholder="ابحث عن رب الأسرة بالاسم…" aria-label="بحث عن رب الأسرة"><div id="fundFamilyResults" class="fund-results" aria-live="polite"></div><div id="fundFamilyPicked" class="fund-picked"></div><div class="fund-assist-summary"><span>إجمالي المساهمات المختارة</span><strong id="fundAssistTotal">0.00 ₪</strong></div><p id="fundAssistNote" role="status">يتم اختيار الأسر فقط من سجلات الصندوق الرسمية، وليس من أسماء مكتوبة يدويًا.</p><button type="button" class="btn" id="fundAssistVerify" disabled>تحقّق من التحويل لهذه الأسر</button></section>
 </section>
 <section class="home-dashboard" aria-label="ملخص الأسرة والخدمات">
  <div class="home-dashboard-head"><div><small>لوحة متابعة الأسرة</small><h3>خدماتك في مكان واحد</h3><p>وصول سريع إلى بيانات الأسرة وطلباتك وإشعارات الإدارة.</p></div><span class="home-dashboard-mark" aria-hidden="true"><svg class="pi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10 12 4l9 6"/><path d="M5 10v8M9.7 10v8M14.3 10v8M19 10v8"/><path d="M3 21h18M4 10h16"/></svg></span></div>
@@ -545,8 +545,54 @@ function fundDialog(title,description,icon='◷'){$('fundPaymentTitle').textCont
 $('fundPaymentClose').addEventListener('click',()=>$('fundPaymentModal').classList.remove('open'));
 $('fundPaymentModal').addEventListener('click',e=>{if(e.target===$('fundPaymentModal'))$('fundPaymentModal').classList.remove('open')});
 $('fundAssistToggle').addEventListener('click',()=>{const opened=$('fundAssist').classList.toggle('hidden')===false;$('fundAssistToggle').setAttribute('aria-expanded',String(opened));if(opened)$('fundFamilySearch').focus()});
-let fundSearchTimer;
-$('fundFamilySearch').addEventListener('input',()=>{clearTimeout(fundSearchTimer);const q=$('fundFamilySearch').value.trim();const el=$('fundFamilyResults');el.replaceChildren();if(q.length<2)return;fundSearchTimer=setTimeout(()=>{const p=document.createElement('p');p.className='sub';p.textContent='البحث الآمن في سجل الأسر قيد الربط بالخادم. لن نعرض أسماء غير موثقة أو نتائج وهمية.';el.appendChild(p)},250)});
+let fundSearchTimer, fundSearchSeq=0;
+const fundSelected=new Map();
+function fundRenderSelected(){
+ const container=$('fundFamilyPicked');container.replaceChildren();
+ let total=0;
+ for(const [ref,f] of fundSelected){
+  total+=f.remainingAgorot;
+  const item=document.createElement('div');item.className='fund-picked-item';
+  const name=document.createElement('span');name.textContent=f.familyName+' — '+(f.remainingAgorot/100).toFixed(2)+' ₪';
+  const remove=document.createElement('button');remove.type='button';remove.textContent='إزالة';
+  remove.addEventListener('click',()=>{fundSelected.delete(ref);fundRenderSelected()});
+  item.append(name,remove);container.appendChild(item);
+ }
+ $('fundAssistTotal').textContent=(total/100).toFixed(2)+' ₪';
+ $('fundAssistNote').textContent=fundSelected.size
+  ?'تم اختيار '+fundSelected.size+' أسرة. هذه قائمة تحضيرية فقط؛ لم يتم إرسال طلب دفع أو إثبات تحويل.'
+  :'اختَر الأسر من نتائج البحث. لن تُحتسب أي مساهمة دون تأكيد الإدارة.';
+}
+async function fundSearchFamilies(query,seq){
+ const el=$('fundFamilyResults');el.replaceChildren();
+ const msg=document.createElement('p');msg.className='sub';msg.textContent='جارٍ البحث…';el.appendChild(msg);
+ try{
+  if(!supportSessionToken||!verifiedFamily)throw Error('يلزم تسجيل الدخول أولاً');
+  const r=await fetch(API+'/fund/resident/search?q='+encodeURIComponent(query)+'&month='+encodeURIComponent(residentFundCurrentMonth()),{
+   headers:{'X-Support-Session':supportSessionToken},cache:'no-store'});
+  const data=await r.json();
+  if(seq!==fundSearchSeq)return;
+  if(!r.ok||!data.ok)throw Error(data.error||'تعذر البحث');
+  el.replaceChildren();
+  if(!data.results?.length){const p=document.createElement('p');p.className='sub';p.textContent='لم يتم العثور على أسماء مطابقة';el.appendChild(p);return}
+  for(const family of data.results){
+   const b=document.createElement('button');b.type='button';b.className='fund-result';
+   b.textContent=family.familyName+' — '+(family.status==='paid'?'تم السداد':'المتبقي '+(family.remainingAgorot/100).toFixed(2)+' ₪');
+   b.disabled=family.status==='paid'||family.remainingAgorot<=0||fundSelected.has(family.familyRef);
+   b.addEventListener('click',()=>{
+    if(fundSelected.has(family.familyRef))return;
+    fundSelected.set(family.familyRef,family);b.disabled=true;fundRenderSelected();
+   });
+   el.appendChild(b);
+  }
+ }catch(e){if(seq!==fundSearchSeq)return;el.replaceChildren();const p=document.createElement('p');p.className='sub';p.textContent=e.message||'تعذر البحث';el.appendChild(p)}
+}
+$('fundFamilySearch').addEventListener('input',()=>{
+ clearTimeout(fundSearchTimer);const q=$('fundFamilySearch').value.trim(),seq=++fundSearchSeq;
+ const el=$('fundFamilyResults');el.replaceChildren();
+ if(q.length<3)return;
+ fundSearchTimer=setTimeout(()=>fundSearchFamilies(q,seq),350);
+});
 $('fundCheckPayment').addEventListener('click',async()=>{
  if(!supportSessionToken||!verifiedFamily)return fundDialog('يلزم تسجيل الدخول','يرجى التحقق من هوية رب الأسرة أولاً.','!');
  fundDialog('جاري التأكد من عملية الدفع…','يتم تحديث حالة المساهمة من صندوق المخيم.');
