@@ -593,17 +593,52 @@ $('fundFamilySearch').addEventListener('input',()=>{
  if(q.length<3)return;
  fundSearchTimer=setTimeout(()=>fundSearchFamilies(q,seq),350);
 });
-$('fundCheckPayment').addEventListener('click',async()=>{
+// Real-time display: server remains the sole authority for paid status.
+let fundPollTimer=null, fundPollUntil=0, fundPollBusy=false, fundLastConfirmedMonth='';
+async function fundPollOnce(showDialog=false){
+ if(!supportSessionToken||!verifiedFamily||fundPollBusy)return;
+ fundPollBusy=true;
+ try{
+  const month=residentFundCurrentMonth();
+  const r=await fetch(API+'/fund/resident/status?month='+encodeURIComponent(month),{
+   headers:{'X-Support-Session':supportSessionToken},cache:'no-store'});
+  const data=await r.json();
+  if(!r.ok||!data.ok)throw Error(data.error||'تعذر الاتصال');
+  const wasPaid=$('residentFundStatus').textContent==='تم السداد';
+  await loadResidentFund();
+  if(data.status==='paid'){
+   if(showDialog||(!wasPaid&&fundLastConfirmedMonth!==month)){
+    fundDialog('تم التأكد من عملية التحويل','شكرًا لأسرتكم الكريمة على مساهمتكم في دعم صندوق مخيم أبو عريبان وتيسير أعماله.','✓');
+   }
+   fundLastConfirmedMonth=month;fundStopPolling();return;
+  }
+  if(showDialog)fundDialog('جاري التأكد من المساهمة…','نراجع حالة مساهمتكم تلقائيًا. ستظهر رسالة نجاح فور تسجيل السداد في صندوق المخيم.','◷');
+ }catch(e){
+  if(showDialog)fundDialog('تعذر الاتصال','تعذر الاتصال بصندوق المخيم. سنحاول التحقق مجددًا عند توفر الاتصال.','!');
+ }finally{fundPollBusy=false}
+}
+function fundStopPolling(){if(fundPollTimer){clearInterval(fundPollTimer);fundPollTimer=null}}
+function fundStartPolling(){
+ fundStopPolling();
+ if(!supportSessionToken||!verifiedFamily)return;
+ fundPollUntil=Date.now()+120000;
+ fundPollOnce(false);
+ fundPollTimer=setInterval(()=>{
+  if(!supportSessionToken||!verifiedFamily||Date.now()>fundPollUntil){fundStopPolling();return}
+  if(document.visibilityState==='visible'&&navigator.onLine)fundPollOnce(false);
+ },4000);
+}
+$('fundCheckPayment').addEventListener('click',()=>{
  if(!supportSessionToken||!verifiedFamily)return fundDialog('يلزم تسجيل الدخول','يرجى التحقق من هوية رب الأسرة أولاً.','!');
- fundDialog('جاري التأكد من عملية الدفع…','يتم تحديث حالة المساهمة من صندوق المخيم.');
- await loadResidentFund();
- const status=$('residentFundStatus').textContent;
- if(status==='تم السداد')fundDialog('تم تسجيل المساهمة بنجاح','تؤكد سجلات صندوق المخيم أن مساهمة هذا الشهر مسددة.','✓');
- else if(status==='تعذر التحقق')fundDialog('تعذر الاتصال','تعذر جلب حالة المساهمة من الخادم. يرجى إعادة المحاولة.','!');
- else fundDialog('لم يتم تأكيد الدفع بعد','لا توجد مساهمة مسجلة لهذا الشهر حتى الآن. فحص إشعارات PalPay وربطها آليًا بالأسرة يحتاج إلى مسار تحقق آمن على الخادم؛ لن يتم تسجيل سداد دون دليل.','!');
+ fundDialog('جاري التأكد من المساهمة…','يتم متابعة حالة التحويل مباشرة. ستظهر رسالة الشكر فور تسجيل السداد رسميًا.','◷');
+ fundStartPolling();
+});
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='visible'&&supportSessionToken&&verifiedFamily)fundStartPolling();
 });
 
-function unlockPortal(){ loadResidentFund(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+
+function unlockPortal(){ loadResidentFund(); fundStartPolling(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
 let toastTimer;
 function toast(text,kind=''){const el=$('portalToast');if(!el)return;el.textContent=text;el.className='show '+kind;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='',2600)}
 function updateConnection(){const el=$('connectionChip');if(!el)return;const online=navigator.onLine;el.textContent=online?'متصل بالإنترنت':'غير متصل';el.classList.toggle('offline',!online);const d=$('dashboardConnection');if(d)d.textContent=online?'متصل':'غير متصل'}
