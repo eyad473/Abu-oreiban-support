@@ -522,22 +522,23 @@ $('homeDownloadCard').addEventListener('click',downloadDigitalCard);
 
 // Resident fund status is fetched from the official Worker, never calculated from local family data.
 function residentFundCurrentMonth(){const d=new Date();const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Gaza',year:'numeric',month:'2-digit'}).formatToParts(d);const year=parts.find(x=>x.type==='year')?.value||'2026',month=parts.find(x=>x.type==='month')?.value||'11';return `${year}-${month}`<'2026-11'?'2026-11':`${year}-${month}`}
-async function loadResidentFund(){
+async function loadResidentFund({silent=false}={}){
  const badge=$('residentFundStatus'),message=$('residentFundMessage');if(!badge||!supportSessionToken||!verifiedFamily)return;
  const month=residentFundCurrentMonth();$('residentFundMonth').textContent=new Intl.DateTimeFormat('ar',{timeZone:'Asia/Gaza',month:'long',year:'numeric'}).format(new Date(month+'-15T12:00:00Z'));
- $('residentFund').classList.remove('fund-paid','fund-unpaid','fund-partial');badge.className='resident-fund-pill';badge.textContent='جارٍ التحديث';message.textContent='جارٍ جلب حالة المساهمة من إدارة المخيم…';
+ if(!silent && !badge.dataset.loaded){badge.textContent='جارٍ التحقق';message.textContent='جارٍ جلب حالة المساهمة من إدارة المخيم…';}
  try{
   const r=await fetch(API+'/fund/resident/status?month='+encodeURIComponent(month),{headers:{'X-Support-Session':supportSessionToken},cache:'no-store'});
   const data=await r.json();if(!r.ok||!data.ok)throw Error(data.error||'تعذر تحديث حالة المساهمة');
   const money=n=>(Number(n||0)/100).toFixed(2)+' ₪';
   $('residentFundRequired').textContent=money(data.requiredAgorot);$('residentFundPaid').textContent=money(data.paidAgorot);$('residentFundRemaining').textContent=money(data.remainingAgorot);
-  const state=['paid','unpaid','partial'].includes(data.status)?data.status:null;if(!state)throw Error('حالة سداد غير معروفة');$('residentFund').classList.add('fund-'+state);badge.className='resident-fund-pill '+state;
+  const state=['paid','unpaid','partial'].includes(data.status)?data.status:null;if(!state)throw Error('حالة سداد غير معروفة');$('residentFund').classList.remove('fund-paid','fund-unpaid','fund-partial');$('residentFund').classList.add('fund-'+state);badge.className='resident-fund-pill '+state;badge.dataset.loaded='1';
   if(data.status==='paid'){badge.textContent='تم السداد';message.textContent='شكراً لأسرتكم الكريمة على مساهمتها في دعم صندوق مخيم أبو عريبان.'}
   else if(data.status==='partial'){badge.textContent='سداد جزئي';message.textContent='تم تسجيل مساهمة جزئية لأسرتكم. يظهر المبلغ المتبقي أعلاه.'}
   else{badge.textContent='لم يسجل سداد';message.textContent='لم تُسجل مساهمة لهذا الشهر حتى الآن. إذا قمتم بالدفع، يرجى انتظار تأكيد الإدارة.'}
- }catch(e){$('residentFund').classList.remove('fund-paid','fund-unpaid','fund-partial');badge.className='resident-fund-pill';badge.textContent='تعذر التحقق';message.textContent='تعذر جلب حالة المساهمة حالياً. يرجى المحاولة لاحقاً.';$('residentFundRequired').textContent='—';$('residentFundPaid').textContent='—';$('residentFundRemaining').textContent='—'}
+  return data;
+ }catch(e){if(silent)return null;$('residentFund').classList.remove('fund-paid','fund-unpaid','fund-partial');badge.className='resident-fund-pill';badge.textContent='تعذر التحقق';message.textContent='تعذر جلب حالة المساهمة حالياً. يرجى المحاولة لاحقاً.';$('residentFundRequired').textContent='—';$('residentFundPaid').textContent='—';$('residentFundRemaining').textContent='—'}
 }
-$('residentFundRefresh').addEventListener('click',loadResidentFund);
+$('residentFundRefresh').addEventListener('click',async()=>{await loadResidentFund({silent:true});});
 
 // UI-only contribution phase: no client-side status changes or guessed family matches.
 let fundLastStatus=null;
@@ -595,26 +596,19 @@ $('fundFamilySearch').addEventListener('input',()=>{
 });
 // Real-time display: server remains the sole authority for paid status.
 let fundPollTimer=null, fundPollUntil=0, fundPollBusy=false, fundLastConfirmedMonth='';
-async function fundPollOnce(showDialog=false){
+async function fundPollOnce(){
  if(!supportSessionToken||!verifiedFamily||fundPollBusy)return;
  fundPollBusy=true;
  try{
-  const month=residentFundCurrentMonth();
-  const r=await fetch(API+'/fund/resident/status?month='+encodeURIComponent(month),{
-   headers:{'X-Support-Session':supportSessionToken},cache:'no-store'});
-  const data=await r.json();
-  if(!r.ok||!data.ok)throw Error(data.error||'تعذر الاتصال');
   const wasPaid=$('residentFundStatus').textContent==='تم السداد';
-  await loadResidentFund();
-  if(data.status==='paid'){
-   if(showDialog||(!wasPaid&&fundLastConfirmedMonth!==month)){
+  const data=await loadResidentFund({silent:true});
+  if(data?.status==='paid'){
+   const month=residentFundCurrentMonth();
+   if(!wasPaid&&fundLastConfirmedMonth!==month){
     fundDialog('تم التأكد من عملية التحويل','شكرًا لأسرتكم الكريمة على مساهمتكم في دعم صندوق مخيم أبو عريبان وتيسير أعماله.','✓');
    }
-   fundLastConfirmedMonth=month;fundStopPolling();return;
+   fundLastConfirmedMonth=month;fundStopPolling();
   }
-  if(showDialog)fundDialog('جاري التأكد من المساهمة…','نراجع حالة مساهمتكم تلقائيًا. ستظهر رسالة نجاح فور تسجيل السداد في صندوق المخيم.','◷');
- }catch(e){
-  if(showDialog)fundDialog('تعذر الاتصال','تعذر الاتصال بصندوق المخيم. سنحاول التحقق مجددًا عند توفر الاتصال.','!');
  }finally{fundPollBusy=false}
 }
 function fundStopPolling(){if(fundPollTimer){clearInterval(fundPollTimer);fundPollTimer=null}}
@@ -622,23 +616,23 @@ function fundStartPolling(){
  fundStopPolling();
  if(!supportSessionToken||!verifiedFamily)return;
  fundPollUntil=Date.now()+120000;
- fundPollOnce(false);
+ fundPollOnce();
  fundPollTimer=setInterval(()=>{
   if(!supportSessionToken||!verifiedFamily||Date.now()>fundPollUntil){fundStopPolling();return}
-  if(document.visibilityState==='visible'&&navigator.onLine)fundPollOnce(false);
+  if(document.visibilityState==='visible'&&navigator.onLine)fundPollOnce();
  },4000);
 }
 $('fundCheckPayment').addEventListener('click',()=>{
  if(!supportSessionToken||!verifiedFamily)return fundDialog('يلزم تسجيل الدخول','يرجى التحقق من هوية رب الأسرة أولاً.','!');
- fundDialog('جاري التأكد من المساهمة…','يتم متابعة حالة التحويل مباشرة. ستظهر رسالة الشكر فور تسجيل السداد رسميًا.','◷');
  fundStartPolling();
+ toast('جاري التحقق من المساهمة بالخلفية','ok');
 });
 document.addEventListener('visibilitychange',()=>{
  if(document.visibilityState==='visible'&&supportSessionToken&&verifiedFamily)fundStartPolling();
 });
 
 
-function unlockPortal(){ loadResidentFund(); fundStartPolling(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+function unlockPortal(){ fundStartPolling(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
 let toastTimer;
 function toast(text,kind=''){const el=$('portalToast');if(!el)return;el.textContent=text;el.className='show '+kind;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='',2600)}
 function updateConnection(){const el=$('connectionChip');if(!el)return;const online=navigator.onLine;el.textContent=online?'متصل بالإنترنت':'غير متصل';el.classList.toggle('offline',!online);const d=$('dashboardConnection');if(d)d.textContent=online?'متصل':'غير متصل'}
