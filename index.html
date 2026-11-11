@@ -271,6 +271,35 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 .aid-controls button{background:#155d77;color:white;font-weight:700;cursor:pointer}.aid-month{margin:17px 0 8px;font-weight:800;color:#1a4e66}
 .aid-entry{padding:12px 14px;margin:9px 0;border:1px solid #e1eaf0;border-radius:14px;background:#fbfdff}.aid-entry b{display:block;color:#143c51}.aid-entry small{display:block;color:#718496;margin-top:5px}.aid-entry .aid-qty{font-weight:700;color:#117451;margin-top:6px}
 .aid-state{padding:14px;border-radius:12px;background:#f4f8fb;color:#5b7384;line-height:1.8}.aid-state.error{background:#fff2f2;color:#a03c3c}
+
+/* Resident distribution history — premium responsive visual layer */
+#tab-aid{padding:clamp(12px,3vw,22px)}
+#tab-aid .aid-history{margin:0;padding:clamp(14px,3vw,24px);border-radius:23px;background:linear-gradient(155deg,#fff,#f8fbfd);box-shadow:none}
+.aid-heading{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.aid-heading-icon{width:49px;height:49px;flex:none;display:grid;place-items:center;border-radius:16px;color:#176b78;background:#e4f2f2;border:1px solid #d0e6e7}
+.aid-heading-icon svg,.aid-entry-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.aid-history .aid-heading h3{font-size:19px;line-height:1.5}.aid-history .aid-heading .sub{margin:3px 0 0;font-size:12px}
+.aid-stat{background:#fff;border-color:#dce8ed;box-shadow:0 5px 14px #123e5409;position:relative;overflow:hidden}
+.aid-stat:before{content:"";position:absolute;inset:0 0 auto;height:3px;background:#176b78}.aid-stat:nth-child(2):before{background:#5884b9}
+.aid-stat small{font-size:11px}.aid-stat strong{font-size:27px;font-variant-numeric:tabular-nums}
+.aid-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.aid-controls select{width:100%;min-height:46px;font-size:12px;font-weight:700;background:#fff}
+.aid-controls button{grid-column:1/-1;min-height:46px;border:0;background:linear-gradient(110deg,#16475f,#176e7a);font-weight:800;transition:filter .2s,transform .2s}
+.aid-controls button:active{transform:scale(.99)}.aid-controls button:disabled{opacity:.65}
+#aidUpdated{margin:12px 2px 0;font-size:10px;color:#788a98}
+.aid-month{display:flex;align-items:center;gap:9px;margin:23px 0 12px;color:#16465c;font-size:14px;font-weight:800}
+.aid-month:after{content:"";height:1px;flex:1;background:#dce8ed}
+.aid-entry{padding:0;margin:10px 0;border:1px solid #e0e9ee;border-radius:17px;background:#fff;overflow:hidden;box-shadow:0 5px 15px #123e5408;transition:border-color .2s,box-shadow .2s}
+.aid-entry:hover{border-color:#b9d7db;box-shadow:0 8px 20px #123e5412}
+.aid-entry-main{display:flex;align-items:center;gap:12px;padding:14px}
+.aid-entry-icon{width:43px;height:43px;flex:none;border-radius:13px;display:grid;place-items:center;background:#eaf4f5;color:#176b78}
+.aid-entry-info{min-width:0;flex:1}.aid-entry-info b{font-size:14px;line-height:1.6;overflow-wrap:anywhere}.aid-entry-info small{margin-top:4px;font-size:11px}
+.aid-qty{flex:none;text-align:center;max-width:38%;padding:6px 9px!important;margin:0!important;border-radius:10px;background:#eaf7f0;color:#087443!important;font-size:12px;overflow-wrap:anywhere}
+.aid-entry-details{border-top:1px solid #edf1f4;padding:0 14px 12px}.aid-entry-details summary{cursor:pointer;list-style:none;padding:10px 0 0;color:#176b78;font-size:11px;font-weight:800}.aid-entry-details summary::-webkit-details-marker{display:none}.aid-entry-details summary:after{content:'⌄';margin-inline-start:7px}.aid-entry-details[open] summary:after{content:'⌃'}
+.aid-entry-meta{display:grid;gap:7px;margin-top:9px;color:#60778a;font-size:11px;overflow-wrap:anywhere}.aid-entry-meta strong{color:#284b60;font-weight:700}
+.aid-state{margin-top:15px;text-align:center;border:1px dashed #d3e2e8;padding:22px 14px}
+@media(max-width:380px){.aid-entry-main{gap:8px;padding:11px}.aid-entry-icon{width:36px;height:36px}.aid-entry-info b{font-size:12px}.aid-qty{font-size:11px;padding:5px!important}}
+@media(prefers-reduced-motion:reduce){.aid-entry,.aid-controls button{transition:none}}
 </style><script>document.documentElement.classList.add('session-checking');</script>
 <style>
 html.session-checking #portalGate{display:none!important}
@@ -527,7 +556,7 @@ input[type="tel"],input[inputmode="numeric"],input[inputmode="tel"],.ticket {fon
 <div class="notice">إذا وجدت معلومة غير صحيحة، أرسل طلب تحديث بيانات. لن يتغير السجل الرسمي إلا بعد مراجعة إدارة المخيم واعتماد التعديل.</div>
 </section>
 <section id="tab-aid" class="card hidden" aria-label="سجل المساعدات الخاص بأسرتك">
- <div class="aid-history"><h3>سجل المساعدات والتوزيعات</h3><p class="sub">جميع عمليات الاستلام المؤكدة لأسرتك، بما فيها المساعدات المتكررة.</p>
+ <div class="aid-history"><div class="aid-heading"><span class="aid-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 12"/></svg></span><div><h3>سجل مساعداتي</h3><p class="sub">جميع عمليات الاستلام المؤكدة لأسرتك، بما فيها المساعدات المتكررة.</p></div></div>
  <div class="aid-summary"><div class="aid-stat"><small>عمليات الاستلام</small><strong id="aidTotal">—</strong></div><div class="aid-stat"><small>أنواع المساعدات</small><strong id="aidTypes">—</strong></div></div>
  <div class="aid-controls"><select id="aidTypeFilter" aria-label="نوع المساعدة"><option value="">جميع الأنواع</option></select><select id="aidMonthFilter" aria-label="شهر الاستلام"><option value="">جميع الأشهر</option></select><button id="aidRefresh" type="button">تحديث السجل</button></div>
  <p class="sub" id="aidUpdated"></p><div id="aidList" class="aid-state" role="status" aria-live="polite">افتح هذا القسم لتحميل سجل المساعدات.</div></div>
@@ -724,9 +753,12 @@ function aidRender(){
  $('aidTotal').textContent=String(aidRecords.length);$('aidTypes').textContent=String(new Set(aidRecords.map(x=>x.type)).size);
  if(!rows.length){$('aidList').className='aid-state';$('aidList').textContent='لا توجد عمليات استلام مؤكدة ضمن الفلاتر المختارة.';return}
  let last='';$('aidList').className='';$('aidList').innerHTML=rows.map(x=>{
-  const month=String(x.date||'').slice(0,7)||'تاريخ غير محدد';let header='';if(month!==last){last=month;header='<div class="aid-month">'+aidSafeText(month)+'</div>'}
-  const qty=x.quantity===null?'':String(x.quantity)+' '+(x.unit||'');
-  return header+'<article class="aid-entry"><b>'+aidSafeText(x.type)+'</b><small>'+aidSafeText(x.date||'تاريخ غير محدد')+(x.reference?' · المرجع: '+aidSafeText(x.reference):'')+'</small>'+(qty?'<div class="aid-qty">'+aidSafeText(qty)+'</div>':'')+'</article>';
+  const monthKey=String(x.date||'').slice(0,7)||'تاريخ غير محدد';
+  let header='';if(monthKey!==last){last=monthKey;const parts=monthKey.split('-');const monthLabel=parts.length===2&&/^\d{4}$/.test(parts[0])&&/^\d{2}$/.test(parts[1])&&Number(parts[1])>=1&&Number(parts[1])<=12?new Intl.DateTimeFormat('ar-PS',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(Number(parts[0]),Number(parts[1])-1,1))):monthKey;header='<div class="aid-month">'+aidSafeText(monthLabel)+'</div>'}
+  const qty=x.quantity===null||x.quantity===undefined?'':String(x.quantity)+' '+(x.unit||'');
+  const dateText=String(x.date||'');const dateLabel=/^\d{4}-\d{2}-\d{2}$/.test(dateText)?new Intl.DateTimeFormat('ar-PS',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(dateText+'T12:00:00Z')):(dateText||'تاريخ غير محدد');
+  const icon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5v10l-9 5-9-5V8zM3 8l9 5 9-5M12 13v10"/></svg>';
+  return header+'<article class="aid-entry"><div class="aid-entry-main"><span class="aid-entry-icon">'+icon+'</span><div class="aid-entry-info"><b>'+aidSafeText(x.type||'مساعدة')+'</b><small>'+aidSafeText(dateLabel)+'</small></div>'+(qty?'<span class="aid-qty">'+aidSafeText(qty)+'</span>':'')+'</div>'+(x.reference?'<details class="aid-entry-details"><summary>تفاصيل الاستلام</summary><div class="aid-entry-meta"><span>الرقم المرجعي: <strong dir="ltr">'+aidSafeText(x.reference)+'</strong></span><span>تاريخ الاستلام: <strong>'+aidSafeText(dateLabel)+'</strong></span></div></details>':'')+'</article>';
  }).join('');
 }
 async function aidLoad(force=false){
