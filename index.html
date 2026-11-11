@@ -300,6 +300,33 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 .aid-state{margin-top:15px;text-align:center;border:1px dashed #d3e2e8;padding:22px 14px}
 @media(max-width:380px){.aid-entry-main{gap:8px;padding:11px}.aid-entry-icon{width:36px;height:36px}.aid-entry-info b{font-size:12px}.aid-qty{font-size:11px;padding:5px!important}}
 @media(prefers-reduced-motion:reduce){.aid-entry,.aid-controls button{transition:none}}
+
+/* Aid history v2: compact accessible mobile-first controls */
+#tab-aid .aid-history{background:linear-gradient(160deg,#fff 0%,#f6fafc 100%)}
+#tab-aid .aid-heading{padding-bottom:13px;border-bottom:1px solid #e6eef2}
+#tab-aid .aid-summary{margin:15px 0 18px}
+#tab-aid .aid-stat{border-radius:17px;padding:15px}
+.aid-toolbar{display:flex;gap:8px;align-items:stretch;margin:0 0 12px}
+.aid-search-wrap{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:1px solid #dce8ed;background:#fff;border-radius:13px;padding:0 12px}
+.aid-search-wrap svg,.aid-toolbar button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.aid-search-wrap svg{flex:none;color:#6c8794}
+.aid-search-wrap input{min-width:0;width:100%;height:45px;border:0!important;background:transparent!important;outline:0!important;font:inherit;font-size:12px;color:#173c50;box-shadow:none!important}
+.aid-toolbar button{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;border:0;border-radius:13px;background:#176575;color:#fff;font:inherit;font-size:12px;font-weight:750;cursor:pointer}
+.aid-toolbar button:disabled{opacity:.6}
+.aid-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.aid-controls label{display:grid;gap:5px;color:#657e8d;font-size:11px;font-weight:700;min-width:0}
+.aid-controls select{font-size:12px;min-height:44px}
+.aid-results{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;color:#667e8c;font-size:11px}
+.aid-results button{background:transparent;border:0;padding:6px;color:#176575;font:inherit;font-size:11px;font-weight:750;cursor:pointer}
+.aid-month{font-variant-numeric:tabular-nums;margin-top:20px}
+.aid-entry{border-radius:17px}
+.aid-entry-main{padding:12px;gap:10px}
+.aid-entry-info small{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.aid-entry-details{padding-bottom:10px}
+.aid-entry-meta strong{font-variant-numeric:tabular-nums;unicode-bidi:isolate}
+.aid-confirmed{color:#117451;font-weight:750}
+#aidUpdated{font-variant-numeric:tabular-nums}
+@media(max-width:370px){.aid-toolbar button span{display:none}.aid-toolbar button{width:46px;padding:0}.aid-results{font-size:10px}}
 </style><script>document.documentElement.classList.add('session-checking');</script>
 <style>
 html.session-checking #portalGate{display:none!important}
@@ -558,7 +585,7 @@ input[type="tel"],input[inputmode="numeric"],input[inputmode="tel"],.ticket {fon
 <section id="tab-aid" class="card hidden" aria-label="سجل المساعدات الخاص بأسرتك">
  <div class="aid-history"><div class="aid-heading"><span class="aid-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 12"/></svg></span><div><h3>سجل مساعداتي</h3><p class="sub">جميع عمليات الاستلام المؤكدة لأسرتك، بما فيها المساعدات المتكررة.</p></div></div>
  <div class="aid-summary"><div class="aid-stat"><small>عمليات الاستلام</small><strong id="aidTotal">—</strong></div><div class="aid-stat"><small>أنواع المساعدات</small><strong id="aidTypes">—</strong></div></div>
- <div class="aid-controls"><select id="aidTypeFilter" aria-label="نوع المساعدة"><option value="">جميع الأنواع</option></select><select id="aidMonthFilter" aria-label="شهر الاستلام"><option value="">جميع الأشهر</option></select><button id="aidRefresh" type="button">تحديث السجل</button></div>
+ <div class="aid-toolbar"><div class="aid-search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="aidSearch" type="search" placeholder="ابحث عن مساعدة أو رقم مرجعي" aria-label="البحث في سجل مساعداتي" autocomplete="off"></div><button id="aidRefresh" type="button" aria-label="تحديث السجل"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7.5 7.5 0 0 1 19 7l1 5M4 12l1 5a7.5 7.5 0 0 0 13.5-2"/></svg><span>تحديث</span></button></div><div class="aid-controls"><label>نوع المساعدة<select id="aidTypeFilter" aria-label="نوع المساعدة"><option value="">جميع الأنواع</option></select></label><label>الفترة الزمنية<select id="aidMonthFilter" aria-label="شهر الاستلام"><option value="">جميع الفترات</option></select></label></div><div class="aid-results"><span id="aidResultCount">—</span><button id="aidReset" type="button">إعادة ضبط الفلاتر</button></div>
  <p class="sub" id="aidUpdated"></p><div id="aidList" class="aid-state" role="status" aria-live="polite">افتح هذا القسم لتحميل سجل المساعدات.</div></div>
 </section>
 <section id="tab-request" class="card hidden">
@@ -747,18 +774,21 @@ document.addEventListener('visibilitychange',()=>{
 let aidRecords=[];
 let aidLoaded=false;
 function aidSafeText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function aidDateLabel(raw){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(raw||''));return m?`${m[3]}/${m[2]}/${m[1]}`:(String(raw||'')||'تاريخ غير محدد')}
+function aidMonthLabel(raw){const m=/^(\d{4})-(\d{2})$/.exec(String(raw||''));return m?`${m[2]}/${m[1]}`:(String(raw||'')||'تاريخ غير محدد')}
 function aidRender(){
- const type=$('aidTypeFilter').value,month=$('aidMonthFilter').value;
- const rows=aidRecords.filter(x=>(!type||x.type===type)&&(!month||String(x.date||'').startsWith(month)));
+ const type=$('aidTypeFilter').value,month=$('aidMonthFilter').value,query=$('aidSearch').value.trim().toLocaleLowerCase('ar');
+ const rows=aidRecords.filter(x=>(!type||x.type===type)&&(!month||String(x.date||'').startsWith(month))&&(!query||[x.type,x.reference,x.quantity,x.unit].some(v=>String(v??'').toLocaleLowerCase('ar').includes(query))));
  $('aidTotal').textContent=String(aidRecords.length);$('aidTypes').textContent=String(new Set(aidRecords.map(x=>x.type)).size);
- if(!rows.length){$('aidList').className='aid-state';$('aidList').textContent='لا توجد عمليات استلام مؤكدة ضمن الفلاتر المختارة.';return}
+ $('aidResultCount').textContent=`عرض ${rows.length} من ${aidRecords.length} عملية استلام`;
+ if(!rows.length){$('aidList').className='aid-state';$('aidList').textContent='لا توجد عمليات استلام مؤكدة ضمن خيارات البحث الحالية.';return}
  let last='';$('aidList').className='';$('aidList').innerHTML=rows.map(x=>{
   const monthKey=String(x.date||'').slice(0,7)||'تاريخ غير محدد';
-  let header='';if(monthKey!==last){last=monthKey;const parts=monthKey.split('-');const monthLabel=parts.length===2&&/^\d{4}$/.test(parts[0])&&/^\d{2}$/.test(parts[1])&&Number(parts[1])>=1&&Number(parts[1])<=12?new Intl.DateTimeFormat('ar-PS',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(Number(parts[0]),Number(parts[1])-1,1))):monthKey;header='<div class="aid-month">'+aidSafeText(monthLabel)+'</div>'}
+  let header='';if(monthKey!==last){last=monthKey;header='<div class="aid-month"><span>'+aidSafeText(aidMonthLabel(monthKey))+'</span></div>'}
   const qty=x.quantity===null||x.quantity===undefined?'':String(x.quantity)+' '+(x.unit||'');
-  const dateText=String(x.date||'');const dateLabel=/^\d{4}-\d{2}-\d{2}$/.test(dateText)?new Intl.DateTimeFormat('ar-PS',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(dateText+'T12:00:00Z')):(dateText||'تاريخ غير محدد');
+  const dateLabel=aidDateLabel(x.date);
   const icon='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5v10l-9 5-9-5V8zM3 8l9 5 9-5M12 13v10"/></svg>';
-  return header+'<article class="aid-entry"><div class="aid-entry-main"><span class="aid-entry-icon">'+icon+'</span><div class="aid-entry-info"><b>'+aidSafeText(x.type||'مساعدة')+'</b><small>'+aidSafeText(dateLabel)+'</small></div>'+(qty?'<span class="aid-qty">'+aidSafeText(qty)+'</span>':'')+'</div>'+(x.reference?'<details class="aid-entry-details"><summary>تفاصيل الاستلام</summary><div class="aid-entry-meta"><span>الرقم المرجعي: <strong dir="ltr">'+aidSafeText(x.reference)+'</strong></span><span>تاريخ الاستلام: <strong>'+aidSafeText(dateLabel)+'</strong></span></div></details>':'')+'</article>';
+  return header+'<article class="aid-entry"><div class="aid-entry-main"><span class="aid-entry-icon">'+icon+'</span><div class="aid-entry-info"><b>'+aidSafeText(x.type||'مساعدة')+'</b><small dir="ltr">'+aidSafeText(dateLabel)+'</small></div>'+(qty?'<span class="aid-qty">'+aidSafeText(qty)+'</span>':'')+'</div>'+(x.reference?'<details class="aid-entry-details"><summary>تفاصيل الاستلام</summary><div class="aid-entry-meta"><span>الرقم المرجعي: <strong dir="ltr">'+aidSafeText(x.reference)+'</strong></span><span>تاريخ الاستلام: <strong dir="ltr">'+aidSafeText(dateLabel)+'</strong></span><span class="aid-confirmed">تم الاستلام</span></div></details>':'')+'</article>';
  }).join('');
 }
 async function aidLoad(force=false){
@@ -770,14 +800,14 @@ async function aidLoad(force=false){
   aidRecords=Array.isArray(result.items)?result.items:[];aidLoaded=true;
   const type=$('aidTypeFilter').value,month=$('aidMonthFilter').value;
   $('aidTypeFilter').innerHTML='<option value="">جميع الأنواع</option>'+[...new Set(aidRecords.map(x=>x.type))].sort((a,b)=>a.localeCompare(b,'ar')).map(x=>'<option value="'+aidSafeText(x)+'">'+aidSafeText(x)+'</option>').join('');
-  $('aidMonthFilter').innerHTML='<option value="">جميع الأشهر</option>'+[...new Set(aidRecords.map(x=>String(x.date||'').slice(0,7)).filter(Boolean))].sort().reverse().map(x=>'<option value="'+aidSafeText(x)+'">'+aidSafeText(x)+'</option>').join('');
+  $('aidMonthFilter').innerHTML='<option value="">جميع الفترات</option>'+[...new Set(aidRecords.map(x=>String(x.date||'').slice(0,7)).filter(Boolean))].sort().reverse().map(x=>'<option value="'+aidSafeText(x)+'">'+aidSafeText(x)+'</option>').join('');
   $('aidTypeFilter').value=type;$('aidMonthFilter').value=month;
-  $('aidUpdated').textContent='آخر تحديث: '+new Date(result.updatedAt).toLocaleString('ar-PS');aidRender();
+  $('aidUpdated').textContent='آخر تحديث: '+(result.updatedAt&&!Number.isNaN(new Date(result.updatedAt).getTime())?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(result.updatedAt)):'غير متاح');aidRender();
  }catch(e){$('aidList').className='aid-state error';$('aidList').textContent='تعذر تحميل سجل المساعدات: '+e.message}
  finally{$('aidRefresh').disabled=false}
 }
 $('aidRefresh').addEventListener('click',()=>aidLoad(true));
-$('aidTypeFilter').addEventListener('change',aidRender);$('aidMonthFilter').addEventListener('change',aidRender);
+$('aidTypeFilter').addEventListener('change',aidRender);$('aidMonthFilter').addEventListener('change',aidRender);$('aidSearch').addEventListener('input',aidRender);$('aidReset').addEventListener('click',()=>{$('aidTypeFilter').value='';$('aidMonthFilter').value='';$('aidSearch').value='';aidRender()});
 
 function unlockPortal(){aidRecords=[];aidLoaded=false; fundStartPolling(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
 let toastTimer;
