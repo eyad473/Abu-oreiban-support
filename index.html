@@ -261,6 +261,16 @@ body.large-text{font-size:18px}body.large-text .sub,body.large-text .field label
 /* Camp contribution interface — phase 1. Server remains authoritative. */
 .fund-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}.fund-actions .btn{font-size:12px;min-height:41px}
 .fund-assist{margin-top:13px;padding:14px;border:1px solid #d8e7ed;border-radius:15px;background:#fff}.fund-assist h4{margin:0 0 6px;color:#102b46}.fund-assist p{font-size:12px;color:#627587;line-height:1.9}.fund-search{width:100%;padding:12px;border:1px solid #cbdce6;border-radius:12px;font:inherit}.fund-results{display:grid;gap:7px;margin-top:9px}.fund-result{padding:10px;border:1px solid #dce7ee;background:#f7fafc;border-radius:11px;text-align:right;font:inherit;cursor:pointer}.fund-picked{display:grid;gap:7px;margin-top:10px}.fund-picked-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px;border-radius:10px;background:#eef6f7;font-size:12px}.fund-picked-item button{border:0;background:transparent;color:#b42318;font:inherit}.fund-assist-summary{display:flex;justify-content:space-between;margin:12px 0;font-weight:800}.fund-modal{position:fixed;inset:0;z-index:10060;background:#0b223dbd;display:none;align-items:center;justify-content:center;padding:18px}.fund-modal.open{display:flex}.fund-modal-dialog{width:min(100%,440px);background:#fff;border-radius:22px;padding:24px;text-align:center;box-shadow:0 25px 80px #061a2c44}.fund-modal-dialog h3{margin:10px 0;color:#102b46}.fund-modal-dialog p{font-size:13px;line-height:1.9;color:#526779}.fund-modal-dialog .btn{margin:6px}
+
+/* Private family distribution history */
+.aid-history{margin:18px 0;border:1px solid #dbe6ed;border-radius:22px;padding:18px;background:#fff;box-shadow:0 10px 28px #17334a0a}
+.aid-history h3{margin:0;color:#18384e;font-size:20px}.aid-history .sub{margin:5px 0 12px}
+.aid-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+.aid-stat{padding:13px;border-radius:15px;background:#f3f8fb;border:1px solid #e3edf2}.aid-stat small{display:block;color:#667d8d;font-size:12px}.aid-stat strong{display:block;font-size:23px;color:#123e54;margin-top:5px}
+.aid-controls{display:flex;gap:8px;flex-wrap:wrap}.aid-controls select,.aid-controls button{flex:1 1 125px;min-width:0;border:1px solid #d9e5eb;border-radius:12px;padding:11px;background:white;color:#15364d;font:inherit}
+.aid-controls button{background:#155d77;color:white;font-weight:700;cursor:pointer}.aid-month{margin:17px 0 8px;font-weight:800;color:#1a4e66}
+.aid-entry{padding:12px 14px;margin:9px 0;border:1px solid #e1eaf0;border-radius:14px;background:#fbfdff}.aid-entry b{display:block;color:#143c51}.aid-entry small{display:block;color:#718496;margin-top:5px}.aid-entry .aid-qty{font-weight:700;color:#117451;margin-top:6px}
+.aid-state{padding:14px;border-radius:12px;background:#f4f8fb;color:#5b7384;line-height:1.8}.aid-state.error{background:#fff2f2;color:#a03c3c}
 </style><script>document.documentElement.classList.add('session-checking');</script>
 <style>
 html.session-checking #portalGate{display:none!important}
@@ -465,7 +475,7 @@ input[type="tel"],input[inputmode="numeric"],input[inputmode="tel"],.ticket {fon
 <section id="portalWelcome" aria-label="ترحيب وحالة الاتصال"><div class="welcome-copy"><small>مرحباً بعودتك إلى بوابة الأهالي</small><strong id="portalGreeting">أهلاً وسهلاً بك</strong><p>هذه مساحتك لمتابعة خدمات أسرتك والتواصل مع إدارة المخيم.</p></div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><button type="button" class="section-heading" id="openNotifications" aria-label="فتح الإشعارات" style="margin:0;border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 10px;color:var(--ink);font:inherit;font-size:11px;font-weight:800"><svg class="official-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg> الإشعارات <span id="bellCount" class="notification-count hidden">0</span></button><span id="connectionChip" class="connection-chip">متصل</span><button type="button" class="btn secondary" id="logoutBtn">تسجيل الخروج</button></div></section>
 <div class="phase3-tools" aria-label="أدوات تسهيل الاستخدام"><button type="button" id="toggleAccess">أدوات تسهيل القراءة</button><button type="button" id="readAnnouncements"><svg class="official-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4zm13-2a6 6 0 0 1 0 8m2-11a10 10 0 0 1 0 14"/></svg> قراءة الإعلانات</button></div><div class="access-panel" id="accessPanel" aria-label="إعدادات العرض"><b>إعدادات العرض والقراءة</b><div class="actions"><button type="button" class="tool-btn" id="fontSmaller" aria-label="تصغير الخط">A−</button><button type="button" class="tool-btn" id="fontReset">حجم عادي</button><button type="button" class="tool-btn" id="fontLarger" aria-label="تكبير الخط">A+</button><button type="button" class="tool-btn" id="contrastToggle">تباين مرتفع</button><button type="button" class="tool-btn" id="motionToggle">تقليل الحركة</button></div><p class="offline-note">تُطبق هذه الإعدادات على هذه الصفحة فقط، ويمكن إعادتها للوضع الطبيعي في أي وقت.</p></div>
 <nav class="nav" aria-label="خدمات البوابة">
-<button class="active" data-tab="home">الرئيسية</button><button data-tab="data">بياناتي</button><button data-tab="request">إرسال طلب</button><button data-tab="notifications"><svg class="official-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg> الإشعارات <span id="navBellCount" class="notification-count hidden">0</span></button>
+<button class="active" data-tab="home">الرئيسية</button><button data-tab="data">بياناتي</button><button data-tab="aid">مساعداتي</button><button data-tab="request">إرسال طلب</button><button data-tab="notifications"><svg class="official-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg> الإشعارات <span id="navBellCount" class="notification-count hidden">0</span></button>
 </nav>
 <section id="tab-home">
 <section class="resident-fund" id="residentFund" aria-label="مساهمة الأسرة الشهرية">
@@ -515,6 +525,12 @@ input[type="tel"],input[inputmode="numeric"],input[inputmode="tel"],.ticket {fon
 <section class="card" id="serviceGuideSection"><div class="section-heading"><div><h3>دليل خدمات وموقع المخيم</h3><p class="sub" style="margin:3px 0 0">روابط إرشادية للوصول إلى موقع المخيم</p></div><span class="pill">دليل الوصول</span></div><div class="service-guide"><div class="service-guide-item"><div class="service-guide-icon">⌖</div><div><b>موقع مخيم أبو عريبان</b><small>افتح موقع المخيم على الخريطة للوصول إلى المنطقة.</small></div></div><div class="service-guide-item"><div class="service-guide-icon">ℹ</div><div><b>معلومات الخدمات</b><small>سيتم إضافة نقاط الخدمات المعتمدة بعد تزويد البوابة بمواقعها الرسمية.</small></div></div></div><a class="guide-map-link" href="https://maps.app.goo.gl/7123cttNb1dUYTMK9" target="_blank" rel="noopener noreferrer"><div>فتح موقع المخيم على الخريطة<span>يفتح تطبيق الخرائط أو المتصفح</span></div><b aria-hidden="true">←</b></a><div class="notice">لم نضع علامات لمراكز مياه أو تعليم أو صحة دون إحداثيات مؤكدة؛ يمكن إضافتها لاحقاً عند اعتماد مواقعها من إدارة المخيم.</div></section>
 
 <div class="notice">إذا وجدت معلومة غير صحيحة، أرسل طلب تحديث بيانات. لن يتغير السجل الرسمي إلا بعد مراجعة إدارة المخيم واعتماد التعديل.</div>
+</section>
+<section id="tab-aid" class="card hidden" aria-label="سجل المساعدات الخاص بأسرتك">
+ <div class="aid-history"><h3>سجل المساعدات والتوزيعات</h3><p class="sub">جميع عمليات الاستلام المؤكدة لأسرتك، بما فيها المساعدات المتكررة.</p>
+ <div class="aid-summary"><div class="aid-stat"><small>عمليات الاستلام</small><strong id="aidTotal">—</strong></div><div class="aid-stat"><small>أنواع المساعدات</small><strong id="aidTypes">—</strong></div></div>
+ <div class="aid-controls"><select id="aidTypeFilter" aria-label="نوع المساعدة"><option value="">جميع الأنواع</option></select><select id="aidMonthFilter" aria-label="شهر الاستلام"><option value="">جميع الأشهر</option></select><button id="aidRefresh" type="button">تحديث السجل</button></div>
+ <p class="sub" id="aidUpdated"></p><div id="aidList" class="aid-state" role="status" aria-live="polite">افتح هذا القسم لتحميل سجل المساعدات.</div></div>
 </section>
 <section id="tab-request" class="card hidden">
 <h3>إرسال طلب إلى إدارة المخيم</h3><p class="sub">بعد التحقق من بياناتك، يمكنك إرسال استفسار أو شكوى أو طلب مساعدة أو تحديث بيانات الأسرة.</p>
@@ -578,8 +594,9 @@ function statusMarkup(value){
 }
 
 function tab(name){
+ if(name==='aid')aidLoad();
  document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===name);b.setAttribute('aria-current',b.dataset.tab===name?'page':'false')});
- ['home','data','request','notifications'].forEach(t=>{const panel=$('tab-'+t),active=t===name;panel.classList.toggle('hidden',!active);if(active){panel.classList.remove('tab-enter');void panel.offsetWidth;panel.classList.add('tab-enter')}});
+ ['home','data','aid','request','notifications'].forEach(t=>{const panel=$('tab-'+t),active=t===name;panel.classList.toggle('hidden',!active);if(active){panel.classList.remove('tab-enter');void panel.offsetWidth;panel.classList.add('tab-enter')}});
 }
 document.querySelectorAll('[data-go-tab]').forEach(button=>button.addEventListener('click',async()=>{const target=button.dataset.goTab;tab(target);if(target==='notifications'){await refreshFamilyNotifications();markVisibleNotificationsRead()}$('tab-'+target).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})}));
 $('homeDownloadCard').addEventListener('click',downloadDigitalCard);
@@ -696,7 +713,41 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 
-function unlockPortal(){ fundStartPolling(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
+
+// Distribution history is never persisted in localStorage or service-worker caches.
+let aidRecords=[];
+let aidLoaded=false;
+function aidSafeText(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function aidRender(){
+ const type=$('aidTypeFilter').value,month=$('aidMonthFilter').value;
+ const rows=aidRecords.filter(x=>(!type||x.type===type)&&(!month||String(x.date||'').startsWith(month)));
+ $('aidTotal').textContent=String(aidRecords.length);$('aidTypes').textContent=String(new Set(aidRecords.map(x=>x.type)).size);
+ if(!rows.length){$('aidList').className='aid-state';$('aidList').textContent='لا توجد عمليات استلام مؤكدة ضمن الفلاتر المختارة.';return}
+ let last='';$('aidList').className='';$('aidList').innerHTML=rows.map(x=>{
+  const month=String(x.date||'').slice(0,7)||'تاريخ غير محدد';let header='';if(month!==last){last=month;header='<div class="aid-month">'+aidSafeText(month)+'</div>'}
+  const qty=x.quantity===null?'':String(x.quantity)+' '+(x.unit||'');
+  return header+'<article class="aid-entry"><b>'+aidSafeText(x.type)+'</b><small>'+aidSafeText(x.date||'تاريخ غير محدد')+(x.reference?' · المرجع: '+aidSafeText(x.reference):'')+'</small>'+(qty?'<div class="aid-qty">'+aidSafeText(qty)+'</div>':'')+'</article>';
+ }).join('');
+}
+async function aidLoad(force=false){
+ if(!supportSessionToken||!verifiedFamily)return;
+ if(aidLoaded&&!force){aidRender();return}
+ $('aidList').className='aid-state';$('aidList').textContent='جارٍ تحميل سجل المساعدات الرسمي…';$('aidRefresh').disabled=true;
+ try{
+  const result=await api('/support/distributions',{});
+  aidRecords=Array.isArray(result.items)?result.items:[];aidLoaded=true;
+  const type=$('aidTypeFilter').value,month=$('aidMonthFilter').value;
+  $('aidTypeFilter').innerHTML='<option value="">جميع الأنواع</option>'+[...new Set(aidRecords.map(x=>x.type))].sort((a,b)=>a.localeCompare(b,'ar')).map(x=>'<option value="'+aidSafeText(x)+'">'+aidSafeText(x)+'</option>').join('');
+  $('aidMonthFilter').innerHTML='<option value="">جميع الأشهر</option>'+[...new Set(aidRecords.map(x=>String(x.date||'').slice(0,7)).filter(Boolean))].sort().reverse().map(x=>'<option value="'+aidSafeText(x)+'">'+aidSafeText(x)+'</option>').join('');
+  $('aidTypeFilter').value=type;$('aidMonthFilter').value=month;
+  $('aidUpdated').textContent='آخر تحديث: '+new Date(result.updatedAt).toLocaleString('ar-PS');aidRender();
+ }catch(e){$('aidList').className='aid-state error';$('aidList').textContent='تعذر تحميل سجل المساعدات: '+e.message}
+ finally{$('aidRefresh').disabled=false}
+}
+$('aidRefresh').addEventListener('click',()=>aidLoad(true));
+$('aidTypeFilter').addEventListener('change',aidRender);$('aidMonthFilter').addEventListener('change',aidRender);
+
+function unlockPortal(){aidRecords=[];aidLoaded=false; fundStartPolling(); $('portalGate').classList.add('hidden'); $('portalHeader').classList.remove('hidden'); $('portalMain').classList.remove('hidden'); tab('home'); window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); }
 let toastTimer;
 function toast(text,kind=''){const el=$('portalToast');if(!el)return;el.textContent=text;el.className='show '+kind;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='',2600)}
 function updateConnection(){const el=$('connectionChip');if(!el)return;const online=navigator.onLine;el.textContent=online?'متصل بالإنترنت':'غير متصل';el.classList.toggle('offline',!online);const d=$('dashboardConnection');if(d)d.textContent=online?'متصل':'غير متصل'}
